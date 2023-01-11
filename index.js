@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 app.post("/api/signin", (req, res) => {
     const { email, password } = req.body;
 
-    userModel.find({ email: email }, (err, user) => {
+    userModel.findOne({ email: email }).exec((err, user) => {
         if (err) return res.json({ error: "Failed to login" }).status(500);
         // Find if email exists
         if (!user) {
@@ -38,7 +38,13 @@ app.post("/api/signin", (req, res) => {
             if (!isCorrectPassword) {
                 return res.json({ error: "Invalid credentials" }).status(400);
             }
-            return res.json(user);
+            // Exclude the hash field as the response to the client
+            return res.json({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+            });
         }
     });
 });
@@ -46,8 +52,9 @@ app.post("/api/signin", (req, res) => {
 app.post("/api/register", (req, res) => {
     const { password, name, email, phone } = req.body;
 
-    userModel.find({ email, email }, (err, user) => {
+    userModel.findOne({ email, email }, (err, user) => {
         if (err) return res.json({ error: "Error occured" }).status(500);
+        console.log(user);
         if (user)
             return res.json({ error: "Email already exists!" }).status(400);
 
