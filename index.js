@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 const express = require("express");
 const mongoose = require("mongoose");
-const { v4: uuid } = require("uuid");
 
 const app = express();
 const mongoUri = process.env.MONGO_URI;
@@ -50,14 +49,10 @@ app.post("/api/register", (req, res) => {
 
         const hash = bcrypt.hashSync(password, 10);
 
-        userModel.create(
-            { id: uuid(), name, email, phone, hash },
-            (err, user) => {
-                if (err)
-                    return res.json({ error: "Error occured" }).status(500);
-                return res.json(user);
-            }
-        );
+        userModel.create({ name, email, phone, hash }, (err, user) => {
+            if (err) return res.json({ error: "Error occured" }).status(500);
+            return res.json(user);
+        });
     });
 });
 
