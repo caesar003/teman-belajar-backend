@@ -1,28 +1,5 @@
-require("dotenv").config();
-const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcrypt");
-
-const postgreUri = process.env.POSTGRE_URI;
-const postgreKey = process.env.POSTGRE_ANON_KEY;
-
-const supabase = createClient(postgreUri, postgreKey);
-
-class Lesson {
-    get(res) {
-        supabase
-            .from("lessons")
-            .select("*")
-            .then((data) => {
-                console.log(data);
-                return res.json(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json(err);
-            });
-    }
-    add() {}
-}
+const { supabase } = require("../config");
 
 class Student {
     signin(credentials, res) {
@@ -103,42 +80,7 @@ class Student {
     }
     get() {}
 }
-class Question {
-    constructor() {}
-    add() {}
-    getLatest() {}
-    getByPopularity() {}
-    getByTag(tag, res) {
-        supabase
-            .from("questions")
-            .select()
-            .ilike("tags", `%${tag}%`)
-            .then((data) => {
-                console.log(data);
-                return res.json(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured!" });
-            });
-    }
-    search(query, res) {
-        supabase
-            .from("questions")
-            .select("*")
-            .ilike("question", `%${query}%`)
-            .then((data) => {
-                console.log(data);
-                return res.json(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured!" });
-            });
-    }
-}
-const lesson = new Lesson();
-const student = new Student();
-const question = new Question();
 
-module.exports = { student, lesson, question };
+const student = new Student();
+
+module.exports = { student };
