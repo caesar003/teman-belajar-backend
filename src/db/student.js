@@ -2,7 +2,20 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 class Student {
-    get() {}
+    getById(id, res) {
+        supabase
+            .from("students")
+            .select("*")
+            .eq("id", id)
+            .then((data) => {
+                console.log(data);
+                return res.json(data);
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json({ error: "Error occured" });
+            });
+    }
 
     register(credentials, res) {
         const { password, name, email, phone } = credentials;
@@ -50,7 +63,21 @@ class Student {
                 return res.status(500).json({ error: "Error occured!" });
             });
     }
-    search() {}
+
+    search(name, res) {
+        supabase
+            .from("students")
+            .select("*")
+            .ilike("name", name)
+            .then((data) => {
+                console.log(data);
+                return res.json(data);
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json({ error: "Error occured!" });
+            });
+    }
 
     signin(credentials, res) {
         const { email, password } = credentials;

@@ -43,6 +43,7 @@ class Question {
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -57,6 +58,7 @@ class Question {
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -71,6 +73,7 @@ class Question {
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -121,10 +124,12 @@ class Question {
                     })
                     .catch((err) => {
                         console.log(err);
+                        return res.status(500).json({ error: "Error occured" });
                     });
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 }

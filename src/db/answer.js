@@ -10,9 +10,11 @@ class Answer {
             .insert({ question_id: questionId, student_id: studentId })
             .then((data) => {
                 console.log(data);
+                return res.json(data);
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -24,9 +26,11 @@ class Answer {
             .eq("id", id)
             .then((data) => {
                 console.log(data);
+                return res.json(data);
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -38,9 +42,11 @@ class Answer {
             .eq("id", id)
             .then((data) => {
                 console.log(data);
+                return res.json(data);
             })
             .catch((err) => {
                 console.log(err);
+                return res.status(500).json({ error: "Error occured" });
             });
     }
 
@@ -58,15 +64,18 @@ class Answer {
                     .eq("id", id)
                     .then((data) => {
                         console.log(data);
+                        return res.json(data);
                     })
                     .catch((err) => {
                         console.log(err);
+                        return res
+                            .status(500)
+                            .json({ error: "Error occured!" });
                     });
-                return;
             })
             .catch((err) => {
                 console.log(err);
-                return;
+                return res.status(500).json({ error: "Error occured!" });
             });
     }
 }

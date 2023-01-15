@@ -14,6 +14,7 @@ class Tag {
                 console.log(err);
             });
     }
+
     getTagName(id) {
         supabase
             .from("tags")
@@ -26,6 +27,7 @@ class Tag {
                 console.log(err);
             });
     }
+
     tagQuestion(tagId, questionId) {
         supabase
             .from("tag_question")
@@ -40,6 +42,7 @@ class Tag {
                 console.log(err);
             });
     }
+
     add(tag) {
         supabase
             .from("tags")
@@ -51,6 +54,7 @@ class Tag {
                 console.log(err);
             });
     }
+
     getTagId(tag) {
         supabase
             .from("tags")
