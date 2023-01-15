@@ -15,6 +15,8 @@ class Lesson {
             });
     }
     add() {}
+    update() {}
+    delete() {}
 }
 const lesson = new Lesson();
 
