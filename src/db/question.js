@@ -6,16 +6,7 @@ class Question {
     constructor() {}
 
     ask(formData, res) {
-        /**
-         * insert form data to questions table,
-         * get tag id from tags table, if it does exist, create it
-         * if it doesn't and return the id;
-         * insert tags relation to tag_question table
-         */
         const { question, studentId, tags: formTags } = formData;
-
-        // console.log(formData);
-        // return res.json({ message: "request accepted" });
 
         const tags = JSON.parse(formTags);
         supabase

@@ -2,47 +2,6 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 class Tag {
-    add(tag, res) {
-        supabase
-            .from("tags")
-            .insert({ name: tag })
-            .select("*")
-            .single()
-            .then(({ data }) => {
-                const { id } = data;
-                return id;
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured!" });
-            });
-    }
-    delete(tagId) {
-        supabase
-            .from("tags")
-            .delete()
-            .eq("id", tagId)
-            .then((data) => {
-                console.log(data);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
-
-    getTagName(id) {
-        supabase
-            .from("tags")
-            .select("tag")
-            .eq("id", id)
-            .then((data) => {
-                console.log(data);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
-
     insertTag(tag, questionId) {
         supabase
             .from("tags")
@@ -89,19 +48,6 @@ class Tag {
             });
     }
 
-    getTagId(tag) {
-        supabase
-            .from("tags")
-            .select("id")
-            .eq("name", tag)
-            .single()
-            .then(({ data: { id } }) => {
-                return id;
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    }
 }
 
 const tag = new Tag();
