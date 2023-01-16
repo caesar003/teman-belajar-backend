@@ -4,16 +4,14 @@ class Answer {
     constructor() {}
 
     answer(formData, res) {
-        const { questionId, studentId } = formData;
+        const { questionId, studentId, text } = formData;
         supabase
             .from("answers")
-            .insert({ question_id: questionId, student_id: studentId })
+            .insert({ question_id: questionId, student_id: studentId, text })
             .then((data) => {
-                console.log(data);
                 return res.json(data);
             })
             .catch((err) => {
-                console.log(err);
                 return res.status(500).json({ error: "Error occured" });
             });
     }
