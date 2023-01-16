@@ -94,6 +94,30 @@ class Question {
             });
     }
 
+    update(formData, res) {
+        const { text, id, tags: formTags } = formData;
+        const tags = JSON.parse(formTags);
+        // update the question fields,
+        supabase
+            .from("questions")
+            .update({ text: text })
+            .eq("id", id)
+            .select("*")
+            .then((data) => {
+                console.log(data);
+                /**
+                 * TODO: something about the tags,
+                 * ?
+                 */
+
+                return res.json(data);
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json({ error: "Error occured!", err });
+            });
+    }
+
     vote(formData, res) {
         const { vote, id } = formData;
         supabase
