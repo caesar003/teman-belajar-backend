@@ -6,13 +6,13 @@ class Question {
     constructor() {}
 
     ask(formData, res) {
-        const { question, studentId, tags: formTags } = formData;
+        const { text, studentId, tags: formTags } = formData;
 
         const tags = JSON.parse(formTags);
         supabase
             .from("questions")
             .insert({
-                text: question,
+                text: text,
                 student_id: studentId,
             })
             .select("*")
@@ -31,17 +31,7 @@ class Question {
 
     delete(formData, res) {
         const { id } = formData;
-        supabase
-            .from("questions")
-            .delete()
-            .eq("id", id)
-            .then((data) => {
-                console.log(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured" });
-            });
+        return Tag.deleteTagQuestion(id, res);
     }
 
     getLatest(res) {
