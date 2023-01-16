@@ -51,4 +51,8 @@ app.get("/api/search-student/:name", (req, res) =>
     student.search(req.params.name, res)
 );
 
+// Testings
+
+app.post("/api/add-tag", (req, res) => tag.add(req.body.tag, res));
+
 app.listen(port, () => console.log(`App is running on port: ${port}`));

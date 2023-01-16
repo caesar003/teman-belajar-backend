@@ -6,29 +6,35 @@ class Question {
     constructor() {}
 
     ask(formData, res) {
-        const { question, studentId, tags } = formData;
+        /**
+         * insert form data to questions table,
+         * get tag id from tags table, if it does exist, create it
+         * if it doesn't and return the id;
+         * insert tags relation to tag_question table
+         */
+        const { question, studentId, tags: formTags } = formData;
 
+        // console.log(formData);
+        // return res.json({ message: "request accepted" });
+
+        const tags = JSON.parse(formTags);
         supabase
             .from("questions")
             .insert({
-                question,
+                text: question,
                 student_id: studentId,
             })
             .select("*")
-            .then((data) => {
-                console.log(data);
-                // captute question id, and use it for tag
-                // do something about tags if there is any
-
-                // get tag id, insert it to tag_question
+            .single()
+            .then(({ data }) => {
+                const { id: questionId } = data;
                 tags.forEach((tag) => {
-                    Tag.tagQuestion(tag);
+                    Tag.tagQuestion(tag, questionId);
                 });
-
                 return res.json(data);
             })
             .catch((err) => {
-                return res.status(500).json({ error: "Error occured" });
+                return res.status(500).json({ error: "Error occured", err });
             });
     }
 

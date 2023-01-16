@@ -2,6 +2,21 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 class Tag {
+    add(tag, res) {
+        supabase
+            .from("tags")
+            .insert({ name: tag })
+            .select("*")
+            .single()
+            .then(({ data }) => {
+                const { id } = data;
+                return id;
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json({ error: "Error occured!" });
+            });
+    }
     delete(tagId) {
         supabase
             .from("tags")
@@ -28,7 +43,21 @@ class Tag {
             });
     }
 
-    tagQuestion(tagId, questionId) {
+    insertTag(tag, questionId) {
+        supabase
+            .from("tags")
+            .insert({ name: tag })
+            .select("id")
+            .single()
+            .then(({ data }) => {
+                return this.insertTagQuestion(data.id, questionId);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    }
+
+    insertTagQuestion(tagId, questionId) {
         supabase
             .from("tag_question")
             .insert({
@@ -36,22 +65,27 @@ class Tag {
                 question_id: questionId,
             })
             .then((data) => {
-                console.log(data);
+                return data;
             })
             .catch((err) => {
                 console.log(err);
             });
     }
 
-    add(tag) {
+    tagQuestion(tag, questionId) {
         supabase
             .from("tags")
-            .insert(tag)
+            .select("id")
+            .eq("name", tag)
+            .single()
             .then((data) => {
-                console.log(data);
+                if (data.error) {
+                    return this.insertTag(tag, questionId);
+                }
+                return this.insertTagQuestion(data.data.id, questionId);
             })
             .catch((err) => {
-                console.log(err);
+                return err;
             });
     }
 
@@ -59,13 +93,10 @@ class Tag {
         supabase
             .from("tags")
             .select("id")
-            .eq("tag", tag)
-            .then((data) => {
-                console.log(data);
-
-                // returns the id if it does exist
-
-                // insert it if it doesn't
+            .eq("name", tag)
+            .single()
+            .then(({ data: { id } }) => {
+                return id;
             })
             .catch((err) => {
                 console.log(err);
