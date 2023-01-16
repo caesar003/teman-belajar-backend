@@ -94,28 +94,30 @@ class Question {
             });
     }
 
-    vote(vote, id) {
+    vote(formData, res) {
+        const { vote, id } = formData;
         supabase
             .from("questions")
             .select("vote")
+            .single()
             .eq("id", id)
-            .then((data) => {
-                console.log(data);
+            .then(({ data }) => {
                 supabase
                     .from("questions")
                     .update({
-                        /* add something here */
+                        vote: data.vote + vote,
                     })
+                    .eq("id", id)
+                    .select()
+                    .single()
                     .then((data) => {
-                        console.log(data);
+                        return res.json(data);
                     })
                     .catch((err) => {
-                        console.log(err);
                         return res.status(500).json({ error: "Error occured" });
                     });
             })
             .catch((err) => {
-                console.log(err);
                 return res.status(500).json({ error: "Error occured" });
             });
     }

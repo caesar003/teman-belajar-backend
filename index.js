@@ -29,7 +29,7 @@ app.get("/api/search-question/:query", (req, res) =>
     question.search(req.params.query, res)
 );
 
-app.post("/api/vote-question", (req, res) => question(req.body, res));
+app.post("/api/vote-question", (req, res) => question.vote(req.body, res));
 
 // ANSWERS
 
