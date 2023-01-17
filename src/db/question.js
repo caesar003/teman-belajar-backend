@@ -6,6 +6,11 @@ class Question {
     constructor() {}
 
     ask(formData, res) {
+        /**
+         * 1. insert question
+         * 2. insert tags (if don't exist yet)
+         * 3. insert tag_question relation
+         */
         const { text, studentId, tags: formTags } = formData;
 
         const tags = JSON.parse(formTags);
@@ -30,8 +35,29 @@ class Question {
     }
 
     delete(formData, res) {
+        /**
+         * 1. delete tag_question,
+         * 2. delete tag (if necessary)
+         * 3. delete answer (if exists)
+         * 4. delete question
+         */
         const { id } = formData;
         return Tag.deleteTagQuestion(id, res);
+    }
+    _delete(id) {
+        /**
+         * private method to delete question row
+         */
+        supabase
+            .from("questions")
+            .delete()
+            .eq("id", id)
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     }
 
     getLatest(res) {

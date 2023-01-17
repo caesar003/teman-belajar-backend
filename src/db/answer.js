@@ -3,6 +3,11 @@ const { supabase } = require("../config");
 class Answer {
     constructor() {}
 
+    /**
+     * We also need to add a method called get(), which is responsible for to
+     * get all answers of a particular question
+     */
+
     answer(formData, res) {
         const { questionId, studentId, text } = formData;
         supabase
@@ -32,6 +37,11 @@ class Answer {
             });
     }
 
+    get() {
+        /**
+         * TODO: complete this method
+         */
+    }
     update(formData, res) {
         const { id, answer } = formData;
         supabase
