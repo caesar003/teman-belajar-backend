@@ -37,10 +37,17 @@ class Answer {
             });
     }
 
-    get() {
-        /**
-         * TODO: complete this method
-         */
+    get(questionId) {
+        supabase
+            .from("answers")
+            .select("*")
+            .eq("question_id", questionId)
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     }
     update(formData, res) {
         const { id, answer } = formData;

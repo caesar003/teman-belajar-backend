@@ -105,6 +105,22 @@ class Question {
             });
     }
 
+    getSingle(id, res) {
+        supabase
+            .from("questions")
+            .select("*")
+            .eq("id", id)
+            .single()
+            .then((data) => {
+                console.log(data);
+                // don't forget to get the answers acorrdingly,
+                return res.json(data);
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json({ error: "Error occured", err });
+            });
+    }
     search(query, res) {
         supabase
             .from("questions")
