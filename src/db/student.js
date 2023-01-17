@@ -85,13 +85,13 @@ class Student {
             .from("students")
             .select("*")
             .eq("email", email)
-            .then(({ data }) => {
-                if (data.length === 0) {
-                    return res.status(404).json({
-                        error: "User with that email does not exist",
-                    });
+            .single()
+            .then(({ data: student }) => {
+                if (!student) {
+                    return res
+                        .status(404)
+                        .json({ error: "User does not exists" });
                 }
-                const student = data[0];
                 const isCorrectPassword = bcrypt.compareSync(
                     password,
                     student.hash
