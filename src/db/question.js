@@ -108,12 +108,11 @@ class Question {
     getSingle(id, res) {
         supabase
             .from("questions")
-            .select("*")
+            .select(`*, tags(*), answers(*)`)
             .eq("id", id)
             .single()
             .then((data) => {
                 console.log(data);
-                // don't forget to get the answers acorrdingly,
                 return res.json(data);
             })
             .catch((err) => {
