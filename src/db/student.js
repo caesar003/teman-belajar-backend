@@ -17,51 +17,29 @@ class Student {
             });
     }
 
-    register(credentials, res) {
+    async register(credentials, res) {
         const { password, name, email, phone } = credentials;
-        supabase
-            .from("students")
-            .select("*")
-            .eq("email", email)
-            .then(({ data }) => {
-                if (data.length) {
-                    return res.status(400).json({
-                        error: "Email already used!",
-                    });
-                }
+        const emailExists = await this._emailExists(email);
 
-                const hash = bcrypt.hashSync(password, 10);
-                supabase
-                    .from("students")
-                    .insert({
-                        name,
-                        phone,
-                        email,
-                        hash,
-                    })
-                    .then((data) => {
-                        console.log(data);
-                        return res.json(data);
-                        /**
-                         {
-                                "error": null,
-                                "data": null,
-                                "count": null,
-                                "status": 201,
-                                "statusText": "Created"
-                            }
-                         */
-                    })
-                    .catch((err) => {
-                        return res
-                            .status(500)
-                            .json({ error: "Error occured!" });
-                    });
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured!" });
+        if (emailExists)
+            return res.status(400).json({
+                error: "Email already used!",
             });
+
+        const hash = bcrypt.hashSync(password, 10);
+        const { data: student } = await supabase
+            .from("students")
+            .insert({
+                name,
+                phone,
+                email,
+                hash,
+            })
+            .select("*")
+            .single();
+
+        delete student.hash;
+        return res.json(student);
     }
 
     search(name, res) {
@@ -79,35 +57,36 @@ class Student {
             });
     }
 
-    signin(credentials, res) {
-        const { email, password } = credentials;
-        supabase
+    async _emailExists(email) {
+        console.log(email);
+        const { data: student } = await supabase
             .from("students")
             .select("*")
             .eq("email", email)
-            .single()
-            .then(({ data: student }) => {
-                if (!student) {
-                    return res
-                        .status(404)
-                        .json({ error: "User does not exists" });
-                }
-                const isCorrectPassword = bcrypt.compareSync(
-                    password,
-                    student.hash
-                );
-                if (!isCorrectPassword) {
-                    return res
-                        .status(400)
-                        .json({ error: "Invalid credentials" });
-                }
-                delete student.hash;
-                return res.json(student);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured" });
-            });
+            .single();
+
+        if (student) return true;
+
+        return false;
+    }
+
+    async signin(credentials, res) {
+        const { email, password } = credentials;
+        const { data: student } = await supabase
+            .from("students")
+            .select("*")
+            .eq("email", email)
+            .single();
+
+        if (!student)
+            return res.status(404).json({ error: "Invalid credentials!" });
+        const isCorrectPassword = bcrypt.compareSync(password, student.hash);
+
+        if (!isCorrectPassword) {
+            return res.status(400).json({ error: "Invalid credentials!" });
+        }
+        delete student.hash;
+        return res.json(student);
     }
 }
 
