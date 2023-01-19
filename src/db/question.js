@@ -3,6 +3,7 @@ const { supabase } = require("../config");
 
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tagQuestion");
+const { answer } = require("./answer");
 class Question {
     constructor() {}
 
@@ -28,30 +29,25 @@ class Question {
         return res.json(data);
     }
 
-    delete(formData, res) {
+    async delete(formData, res) {
         /**
          * 1. delete tag_question,
-         * 2. delete tag (if necessary)
+         * 2. delete tag (if it is no longer linked to any questions)
          * 3. delete answer (if exists)
          * 4. delete question
          */
         const { id } = formData;
-        return Tag.deleteTagQuestion(id, res);
+        // return Tag.deleteTagQuestion(id, res);
+        await tagQuestion.delete(id, Tag.delete);
+        // TODO: delete answer of particular question
+        return this._delete(id, res);
     }
-    _delete(id) {
+    async _delete(id, res) {
         /**
          * private method to delete question row
          */
-        supabase
-            .from("questions")
-            .delete()
-            .eq("id", id)
-            .then((data) => {
-                console.log(data);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+        const { data } = await supabase.from("questions").delete().eq("id", id);
+        return res.json(data);
     }
 
     getLatest(res) {

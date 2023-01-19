@@ -2,6 +2,9 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 class Tag {
+    async delete(id) {
+        return await supabase.from("tags").delete().eq("id", id);
+    }
     insertTag(tag, questionId) {
         supabase
             .from("tags")

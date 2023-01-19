@@ -19,7 +19,7 @@ class Answer {
     }
 
     async delete(formData, res) {
-        const { id } = formData;
+        const { key, value } = formData;
         const { data } = await supabase.from("answers").delete().eq("id", id);
 
         return res.json(data);
