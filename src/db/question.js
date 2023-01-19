@@ -21,11 +21,23 @@ class Question {
         return res.json(data);
     }
 
+    async get({ id }, res) {
+        const tags = await tagQuestion.get(id);
+        const { data } = await supabase
+            .from("questions")
+            .select(`*, answers(text, id, created_at, vote)`)
+            .eq("id", id)
+            .single();
+
+        data.tags = tags;
+        return res.json(data);
+    }
+
     async _insert(param) {
         const { data } = await supabase
             .from("questions")
             .insert(param)
-            .select("*")
+            .select()
             .single();
         return data;
     }
