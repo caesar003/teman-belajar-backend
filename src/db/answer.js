@@ -2,78 +2,64 @@ const { supabase } = require("../config");
 
 class Answer {
     constructor() {}
-    answer(formData, res) {
+
+    async answer(formData, res) {
         const { questionId, studentId, text } = formData;
-        supabase
+
+        const { data } = await supabase
             .from("answers")
-            .insert({ question_id: questionId, student_id: studentId, text })
-            .then((data) => {
-                return res.json(data);
+            .insert({
+                question_id: questionId,
+                student_id: studentId,
+                text: text,
             })
-            .catch((err) => {
-                return res.status(500).json({ error: "Error occured" });
-            });
+            .select("*")
+            .single();
+        return res.json(data);
     }
 
-    delete(formData, res) {
+    async delete(formData, res) {
         const { id } = formData;
-        supabase
-            .from("answers")
-            .delete()
-            .eq("id", id)
-            .then((data) => {
-                console.log(data);
-                return res.json(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured" });
-            });
+        const { data } = await supabase.from("answers").delete().eq("id", id);
+
+        return res.json(data);
     }
 
-    update(formData, res) {
-        const { id, answer } = formData;
-        supabase
-            .from("answers")
-            .update({ answer: answer })
-            .eq("id", id)
-            .then((data) => {
-                console.log(data);
-                return res.json(data);
-            })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured" });
-            });
-    }
-
-    vote(formData, res) {
-        const { vote, id } = formData;
-        supabase
+    async _getVote(id) {
+        const { data } = await supabase
             .from("answers")
             .select("vote")
             .eq("id", id)
-            .then((data) => {
-                console.log(data);
-                supabase
-                    .from("answers")
-                    .update({ vote: vote })
-                    .eq("id", id)
-                    .then((data) => {
-                        console.log(data);
-                        return res.json(data);
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        return res
-                            .status(500)
-                            .json({ error: "Error occured!" });
-                    });
+            .single();
+
+        return data;
+    }
+
+    async update(formData, res) {
+        const { id, answer } = formData;
+        const { data } = await supabase
+            .from("answers")
+            .update({ answer: answer })
+            .eq("id", id)
+            .select()
+            .single();
+
+        return res.json(data.vote);
+    }
+    async vote(formData, res) {
+        const { vote, id } = formData;
+
+        const currentVote = await this._getVote(id);
+
+        const { data } = await supabase
+            .from("answers")
+            .update({
+                vote: currentVote + vote,
             })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ error: "Error occured!" });
-            });
+            .select("*")
+            .single();
+
+        return res.json(data);
     }
 }
 
