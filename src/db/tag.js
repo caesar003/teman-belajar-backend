@@ -102,6 +102,49 @@ class Tag {
                 console.log(err);
             });
     }
+
+    async getTagIds(tags) {
+        const ids = [];
+        /**
+         * check for every items in the array, grab the id using _getId()
+         * method if it exists, or insert it and again grab the id using the
+         * _insert method
+         */
+        tags.forEach((tag) => {
+            const id = this._getId(tag);
+
+            ids.push(id);
+        });
+        console.log(ids);
+    }
+
+    async _insert(tag) {
+        const { data } = await supabase
+            .from("tags")
+            .insert({ name: tag })
+            .select("id")
+            .single();
+
+        return data.id;
+    }
+
+    async _getId(tag) {
+        const { data } = await supabase
+            .from("tags")
+            .select("id")
+            .eq("name", tag)
+            .single();
+
+        if (!data) return await this._insert(tag);
+        return data.id;
+    }
+
+    _getName(id) {}
+
+    async handle(tag, questionId, cb) {
+        const tagId = await this._getId(tag);
+        return cb(tagId, questionId);
+    }
 }
 
 const tag = new Tag();

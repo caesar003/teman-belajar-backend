@@ -2,36 +2,30 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 const { tag: Tag } = require("./tag");
+const { tagQuestion } = require("./tagQuestion");
 class Question {
     constructor() {}
 
-    ask(formData, res) {
+    async ask(formData, res) {
         /**
          * 1. insert question
          * 2. insert tags (if don't exist yet)
          * 3. insert tag_question relation
          */
         const { text, studentId, tags: formTags } = formData;
-
         const tags = JSON.parse(formTags);
-        supabase
+        const { data } = await supabase
             .from("questions")
-            .insert({
-                text: text,
-                student_id: studentId,
-            })
+            .insert({ text: text, student_id: studentId })
             .select("*")
-            .single()
-            .then(({ data }) => {
-                const { id: questionId } = data;
-                tags.forEach((tag) => {
-                    Tag.tagQuestion(tag, questionId);
-                });
-                return res.json(data);
-            })
-            .catch((err) => {
-                return res.status(500).json({ error: "Error occured", err });
-            });
+            .single();
+
+        /**
+         * grab question_id, along with tags pass it to tag.handle() method
+         */
+
+        tags.forEach((tag) => Tag.handle(tag, data.id, tagQuestion.insert));
+        return res.json(data);
     }
 
     delete(formData, res) {
