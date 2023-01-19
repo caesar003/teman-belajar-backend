@@ -2,6 +2,23 @@ const bcrypt = require("bcrypt");
 const { supabase } = require("../config");
 
 class Student {
+    async register(credentials, res) {
+        const { password, name, email, phone } = credentials;
+        const emailExist = await this._getByEmail(email);
+        if (emailExist)
+            return res.status(400).json({ error: "Email is already used!" });
+
+        const hash = bcrypt.hashSync(password, 10);
+        const { data: student } = await supabase
+            .from("students")
+            .insert({ name, phone, email, hash })
+            .select("*")
+            .single();
+
+        delete student.hash;
+        return res.json(student);
+    }
+
     async signin(credentials, res) {
         const { email, password } = credentials;
         const student = await this._getByEmail(email);
