@@ -12,8 +12,15 @@ class Answer {
             })
             .select("*")
             .single();
-
         return res.json(data);
+    }
+
+    async remove(questionId) {
+        const data = await supabase
+            .from("answers")
+            .delete("*")
+            .eq("question_id", questionId);
+        return data;
     }
 }
 

@@ -1,4 +1,5 @@
 const { supabase } = require("../config");
+const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tag-question");
 
@@ -18,6 +19,27 @@ class Question {
         const tags = JSON.parse(formTags);
         const data = await this._insert({ text, student_id: studentId });
         tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
+        return res.json(data);
+    }
+
+    /**
+     * @param {Number} questionId
+     * @returns {void}
+     */
+    async remove({ id }, res) {
+        /**
+         * first of all we need to handle tables that are related,
+         *  - answer
+         *  - tag_question -> remove -> grab tag id -> check if it is still used
+         *  - tag
+         */
+        await answer.remove(id);
+        await tagQuestion.remove(id, Tag.remove);
+        return this._remove(id, res);
+    }
+
+    async _remove(id, res) {
+        const data = await supabase.from("questions").delete().eq("id", id);
         return res.json(data);
     }
 

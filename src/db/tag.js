@@ -1,6 +1,9 @@
 const { supabase } = require("../config");
 
 class Tag {
+    async remove(id) {
+        return await supabase.from("tags").delete().eq("id", id);
+    }
     async handleNew(tag, questionId, tagQuestion) {
         /**
          * We want to see if particular tag has already exists,
@@ -23,7 +26,7 @@ class Tag {
 
         return data.id;
     }
-    
+
     async _getTagId(tag) {
         const { data } = await supabase
             .from("tags")
