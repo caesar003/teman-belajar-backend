@@ -1,3 +1,4 @@
 const { student } = require("./student");
+const { question } = require("./question");
 
-module.exports = { student };
+module.exports = { student, question };
