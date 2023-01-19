@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3002;
 
-const { lesson, question, student, answer, tag } = require("./src/db");
+const { student } = require("./src/db");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
