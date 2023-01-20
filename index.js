@@ -52,7 +52,7 @@ app.post("/api/signin", (req, res) => student.signin(req.body, res));
 app.post("/api/register", (req, res) => student.register(req.body, res));
 
 app.get("/api/search-student/:name", (req, res) =>
-    student.search(req.params.name, res)
+    student.search(req.params, res)
 );
 
 // Testings

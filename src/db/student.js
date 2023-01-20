@@ -19,6 +19,16 @@ class Student {
         return res.json(student);
     }
 
+    async search({ name }, res) {
+        const { data } = await supabase
+            .from("students")
+            .select("id, name, email, phone, created_at")
+            .ilike("name", `%${name}%`)
+            .limit(20);
+
+        return res.json(data);
+    }
+
     async signin(credentials, res) {
         const { email, password } = credentials;
         const student = await this._getByEmail(email);
