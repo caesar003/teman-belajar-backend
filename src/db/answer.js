@@ -23,13 +23,24 @@ class Answer {
         return data;
     }
 
+    async getAnswerCounts(ids) {
+        const { data: allAnswers } = await supabase.from("answers").select("*");
+        const ranks = ids.map((id) => ({
+            id: id.id,
+            counts: allAnswers.filter((items) => items.question_id === id.id)
+                .length,
+        }));
+
+        return ranks.sort((a, b) => b.counts - a.counts).slice(0, 20);
+    }
+
     async _getVote(id) {
         const { data } = await supabase
             .from("answers")
             .select("vote")
             .eq("id", id)
             .single();
-        console.log(data);
+
         return data.vote;
     }
 

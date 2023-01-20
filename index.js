@@ -23,9 +23,9 @@ app.post("/api/delete-question", (req, res) => question.remove(req.body, res));
 
 app.post("/api/update-question", (req, res) => question.update(req.body, res));
 
-app.get("/api/latest-question", (req, res) => question.getLatest(res));
+app.get("/api/latest-questions", (req, res) => question.getLatest(res));
 
-app.get("/api/popular", (req, res) => question.getByPopularity(res));
+app.get("/api/popular-questions", (req, res) => question.getPopular(res));
 
 app.get("/api/tag/:tag", (req, res) => question.getByTag(req.params.tag, res));
 

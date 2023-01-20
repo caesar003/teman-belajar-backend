@@ -58,6 +58,12 @@ class Question {
         return res.json(data);
     }
 
+    async _getAllIds() {
+        const { data } = await supabase.from("questions").select("id");
+
+        return data;
+    }
+
     async getLatest(res) {
         const { data } = await supabase
             .from("questions")
@@ -66,6 +72,36 @@ class Question {
             .order("created_at", { ascending: false });
 
         return res.json(data);
+    }
+
+    /**
+     *
+     * @returns
+     * @description - We fetch rows that contains most answers,
+     */
+    async getPopular(res) {
+        const ids = await this._getAllIds();
+        const questionRanks = await answer.getAnswerCounts(ids);
+        const data = await this._getPopularQuestions(
+            questionRanks.map((m) => m.id)
+        );
+        return res.json(
+            data.map((item) => {
+                return {
+                    ...item,
+                    counts: questionRanks.find((rank) => rank.id === item.id)
+                        .counts,
+                };
+            })
+        );
+    }
+
+    async _getPopularQuestions(arr) {
+        const { data } = await supabase
+            .from("questions")
+            .select("*")
+            .in("id", arr);
+        return data;
     }
 
     async _getVote(id) {
