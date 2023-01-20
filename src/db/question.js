@@ -58,6 +58,16 @@ class Question {
         return res.json(data);
     }
 
+    async getLatest(res) {
+        const { data } = await supabase
+            .from("questions")
+            .select("*")
+            .limit(20)
+            .order("created_at", { ascending: false });
+
+        return res.json(data);
+    }
+
     async _getVote(id) {
         const { data } = await supabase
             .from("questions")
