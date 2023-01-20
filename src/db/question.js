@@ -58,6 +58,16 @@ class Question {
         return res.json(data);
     }
 
+    async _getVote(id) {
+        const { data } = await supabase
+            .from("questions")
+            .select("vote")
+            .eq("id", id)
+            .single();
+
+        return data.vote;
+    }
+
     async _insert(param) {
         const { data } = await supabase
             .from("questions")
@@ -105,6 +115,25 @@ class Question {
         const { data } = await supabase
             .from("questions")
             .update({ text: text })
+            .eq("id", id)
+            .select("*")
+            .single();
+
+        return data;
+    }
+
+    async vote({ id, vote }, res) {
+        const currentVote = await this._getVote(id);
+        const data = await this._vote(vote + currentVote, id);
+        return res.json(data);
+    }
+
+    async _vote(vote, id) {
+        const { data } = await supabase
+            .from("questions")
+            .update({
+                vote: vote,
+            })
             .eq("id", id)
             .select("*")
             .single();
