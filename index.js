@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
 });
 
 // QUESTIONS
-app.get("/api/question/get/:id", (req, res) => question.get(req.params, res));
+app.get("/api/question/id/:id", (req, res) => question.get(req.params, res));
 
 app.post("/api/question/ask", (req, res) => question.ask(req.body, res));
 
@@ -23,13 +23,13 @@ app.delete("/api/question/delete", (req, res) =>
     question.delete(req.body, res)
 );
 
-app.patch("/api/question/update", (req, re) => question.update(req.body, res));
+app.patch("/api/question/update", (req, res) => question.update(req.body, res));
 
-app.get("/api/question/get-latest", (req, res) => question.getLatest(res));
+app.get("/api/question/latest", (req, res) => question.getLatest(res));
 
-app.get("/api/question/get-popular", (req, res) => question.getPopular(res));
+app.get("/api/question/popular", (req, res) => question.getPopular(res));
 
-app.get("/api/question/get-by-tag/:tag", (req, res) =>
+app.get("/api/question/tag/:tag", (req, res) =>
     question.getByTag(req.params, res)
 );
 
