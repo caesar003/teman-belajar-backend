@@ -57,10 +57,6 @@ app.post("/api/student/register", (req, res) =>
     student.register(req.body, res)
 );
 
-app.get("/api/search-student/:name", (req, res) =>
-    student.search(req.params, res)
-);
-
 app.get("/api/student/search/:name", (req, res) =>
     student.search(req.params, res)
 );
