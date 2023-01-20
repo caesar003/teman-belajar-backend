@@ -27,6 +27,16 @@ class TagQuestion {
         return data.map((item) => ({ id: item.tags.id, name: item.tags.name }));
     }
 
+    async getByTagId(tagId) {
+        const { data } = await supabase
+            .from("tag_question")
+            .select("question_id")
+            .eq("tag_id", tagId)
+            .limit(20);
+
+        return data.map((item) => item.question_id);
+    }
+
     async _removeByTag(tagId, questionId) {
         const data = await supabase
             .from("tag_question")

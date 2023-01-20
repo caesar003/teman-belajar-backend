@@ -58,6 +58,14 @@ class Question {
         return res.json(data);
     }
 
+    async getByTag({ tag }, res) {
+        const tagId = await Tag.getId(tag);
+        const questionIds = await tagQuestion.getByTagId(tagId);
+        const data = await this._getManyByIds(questionIds);
+
+        return res.json(data);
+    }
+
     async _getAllIds() {
         const { data } = await supabase.from("questions").select("id");
 
@@ -82,9 +90,7 @@ class Question {
     async getPopular(res) {
         const ids = await this._getAllIds();
         const questionRanks = await answer.getAnswerCounts(ids);
-        const data = await this._getPopularQuestions(
-            questionRanks.map((m) => m.id)
-        );
+        const data = await this._getManyByIds(questionRanks.map((m) => m.id));
         return res.json(
             data.map((item) => {
                 return {
@@ -95,12 +101,14 @@ class Question {
             })
         );
     }
-
-    async _getPopularQuestions(arr) {
+  
+    async _getManyByIds(ids) {
         const { data } = await supabase
             .from("questions")
             .select("*")
-            .in("id", arr);
+            .in("id", ids)
+            .limit(20);
+
         return data;
     }
 
