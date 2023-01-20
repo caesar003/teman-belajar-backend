@@ -15,48 +15,54 @@ app.get("/", (req, res) => {
 });
 
 // QUESTIONS
-app.get("/api/get-question/:id", (req, res) => question.get(req.params, res));
+app.get("/api/question/get/:id", (req, res) => question.get(req.params, res));
 
-app.post("/api/ask", (req, res) => question.ask(req.body, res));
+app.post("/api/question/ask", (req, res) => question.ask(req.body, res));
 
-app.post("/api/delete-question", (req, res) => question.remove(req.body, res));
-
-app.post("/api/update-question", (req, res) => question.update(req.body, res));
-
-app.get("/api/latest-questions", (req, res) => question.getLatest(res));
-
-app.get("/api/popular-questions", (req, res) => question.getPopular(res));
-
-app.get("/api/tag/:tag", (req, res) => question.getByTag(req.params, res));
-
-app.get("/api/search-question/:query", (req, res) =>
-    question.search(req.params.query, res)
+app.delete("/api/question/delete", (req, res) =>
+    question.delete(req.body, res)
 );
 
-app.post("/api/vote-question", (req, res) => question.vote(req.body, res));
+app.patch("/api/question/update", (req, re) => question.update(req.body, res));
+
+app.get("/api/question/get-latest", (req, res) => question.getLatest(res));
+
+app.get("/api/question/get-popular", (req, res) => question.getPopular(res));
+
+app.get("/api/question/get-by-tag/:tag", (req, res) =>
+    question.getByTag(req.params, res)
+);
+
+app.get("/api/question/search/:query", (req, res) =>
+    question.search(req.params, res)
+);
+
+app.patch("/api/question/vote", (req, res) => question.vote(req.body, res));
 
 // ANSWERS
 
-app.post("/api/answer", (req, res) => answer.answer(req.body, res));
+app.post("/api/answer/answer", (req, res) => answer.answer(req.body, res));
 
-app.post("/api/update-answer", (req, res) => answer.update(req.body, res));
+app.patch("/api/answer/update", (req, res) => answer.update(req.body, res));
 
-app.post("/api/delete-answer", (req, res) => answer.remove(req.body, res));
+app.delete("/api/answer/delete", (req, res) => answer.remove(req.body, res));
 
-app.post("/api/vote-answer", (req, res) => answer.vote(req.body, res));
+app.patch("/api/answer/vote", (req, res) => answer.vote(req.body, res));
 
 // STUDENTS
 
-app.post("/api/signin", (req, res) => student.signin(req.body, res));
+app.post("/api/student/signin", (req, res) => student.signin(req.body, res));
 
-app.post("/api/register", (req, res) => student.register(req.body, res));
+app.post("/api/student/register", (req, res) =>
+    student.register(req.body, res)
+);
 
 app.get("/api/search-student/:name", (req, res) =>
     student.search(req.params, res)
 );
 
-// Testings
-
-app.post("/api/add-tag", (req, res) => tag.add(req.body.tag, res));
+app.get("/api/student/search/:name", (req, res) =>
+    student.search(req.params, res)
+);
 
 app.listen(port, () => console.log(`App is running on port: ${port}`));
