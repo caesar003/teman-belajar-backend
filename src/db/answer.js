@@ -22,6 +22,20 @@ class Answer {
             .eq("question_id", questionId);
         return data;
     }
+
+    async update(formData, res) {
+        const { id, text } = formData;
+        const { data } = await supabase
+            .from("answers")
+            .update({
+                text: text,
+            })
+            .eq("id", id)
+            .select("*")
+            .single();
+
+        return res.json(data);
+    }
 }
 
 const answer = new Answer();
