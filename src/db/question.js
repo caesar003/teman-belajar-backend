@@ -131,9 +131,7 @@ class Question {
     async _vote(vote, id) {
         const { data } = await supabase
             .from("questions")
-            .update({
-                vote: vote,
-            })
+            .update({ vote: vote })
             .eq("id", id)
             .select("*")
             .single();

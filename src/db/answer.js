@@ -23,6 +23,16 @@ class Answer {
         return data;
     }
 
+    async _getVote(id) {
+        const { data } = await supabase
+            .from("answers")
+            .select("vote")
+            .eq("id", id)
+            .single();
+        console.log(data);
+        return data.vote;
+    }
+
     async remove({ id }, res) {
         const data = await supabase.from("answers").delete().eq("id", id);
 
@@ -41,6 +51,24 @@ class Answer {
             .single();
 
         return res.json(data);
+    }
+
+    async vote({ id, vote }, res) {
+        const currentVote = await this._getVote(id);
+        const data = await this._vote(vote + currentVote, id);
+
+        return res.json(data);
+    }
+
+    async _vote(vote, id) {
+        const { data } = await supabase
+            .from("answers")
+            .update({ vote: vote })
+            .eq("id", id)
+            .select("*")
+            .single();
+
+        return data;
     }
 }
 
