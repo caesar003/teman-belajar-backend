@@ -15,12 +15,18 @@ class Answer {
         return res.json(data);
     }
 
-    async remove(questionId) {
+    async deleteByQuestion(questionId) {
         const data = await supabase
             .from("answers")
             .delete("*")
             .eq("question_id", questionId);
         return data;
+    }
+
+    async remove({ id }, res) {
+        const data = await supabase.from("answers").delete().eq("id", id);
+
+        return res.json(data);
     }
 
     async update(formData, res) {

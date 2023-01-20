@@ -41,7 +41,7 @@ app.post("/api/answer", (req, res) => answer.answer(req.body, res));
 
 app.post("/api/update-answer", (req, res) => answer.update(req.body, res));
 
-app.post("/api/delete-answer", (req, res) => answer.delete(req.body, res));
+app.post("/api/delete-answer", (req, res) => answer.remove(req.body, res));
 
 app.post("/api/vote-answer", (req, res) => answer.vote(req.params, res));
 

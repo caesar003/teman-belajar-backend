@@ -36,7 +36,7 @@ class Question {
          *  - tag_question -> remove -> grab tag id -> check if it is still used
          *  - tag
          */
-        await answer.remove(id);
+        await answer.deleteByQuestion(id);
         await tagQuestion.remove(id, Tag.remove);
         return this._remove(id, res);
     }
@@ -86,7 +86,7 @@ class Question {
          * we have these tag names ["tag1", "tag17", ];
          * What we want is actually, performing a delete operation
          * on tag_question tables, which contains those tag ids,
-         * 
+         *
          */
 
         if (toDelete.length) {
