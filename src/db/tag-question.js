@@ -26,6 +26,23 @@ class TagQuestion {
 
         return data.map((item) => ({ id: item.tags.id, name: item.tags.name }));
     }
+
+    async _removeByTag(tagId, questionId) {
+        const data = await supabase
+            .from("tag_question")
+            .delete()
+            .eq("tag_id", tagId)
+            .eq("question_id", questionId);
+
+        return data;
+    }
+
+    async handleUpdate(tag, questionId, Tag) {
+        const tagId = await Tag.getId(tag);
+        await this._removeByTag(tagId, questionId);
+        return this._cleanup(tagId, Tag.remove);
+    }
+
     async insert(tagId, questionId) {
         return await supabase.from("tag_question").insert({
             tag_id: tagId,

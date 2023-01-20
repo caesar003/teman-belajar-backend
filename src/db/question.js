@@ -1,4 +1,5 @@
 const { supabase } = require("../config");
+const { groupTags } = require("../helper");
 const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tag-question");
@@ -18,7 +19,9 @@ class Question {
         const { text, studentId, tags: formTags } = formData;
         const tags = JSON.parse(formTags);
         const data = await this._insert({ text, student_id: studentId });
-        tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
+        if (tags.length) {
+            tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
+        }
         return res.json(data);
     }
 
@@ -61,6 +64,51 @@ class Question {
             .insert(param)
             .select()
             .single();
+        return data;
+    }
+
+    /**
+     * Update question
+     * @param {*} formData
+     * @param {*} res
+     * We simply alter the text column in the question table,
+     * in addition, we also want to update the tag_question and tags
+     * as needed
+     */
+    async update(formData, res) {
+        const { text, id } = formData;
+        const oldTags = JSON.parse(formData.oldTags);
+        const newTags = JSON.parse(formData.newTags);
+        const { toDelete, toInsert } = groupTags(oldTags, newTags);
+
+        /**
+         * Delete tag,
+         * we have these tag names ["tag1", "tag17", ];
+         * What we want is actually, performing a delete operation
+         * on tag_question tables, which contains those tag ids,
+         * 
+         */
+
+        if (toDelete.length) {
+            toDelete.forEach((item) => tagQuestion.handleUpdate(item, id, Tag));
+        }
+
+        if (toInsert.length) {
+            toInsert.forEach((item) => Tag.handleNew(item, id, tagQuestion));
+        }
+
+        const data = this._update(text, id);
+        return res.json(data);
+    }
+
+    async _update(text, id) {
+        const { data } = await supabase
+            .from("questions")
+            .update({ text: text })
+            .eq("id", id)
+            .select("*")
+            .single();
+
         return data;
     }
 }

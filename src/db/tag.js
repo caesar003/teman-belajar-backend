@@ -13,7 +13,7 @@ class Tag {
          * either way, we call private method _getTagId
          */
 
-        const tagId = await this._getTagId(tag);
+        const tagId = await this._getId(tag);
         return tagQuestion.insert(tagId, questionId);
     }
 
@@ -27,7 +27,7 @@ class Tag {
         return data.id;
     }
 
-    async _getTagId(tag) {
+    async _getId(tag) {
         const { data } = await supabase
             .from("tags")
             .select("id")
@@ -35,6 +35,15 @@ class Tag {
             .eq("name", tag);
 
         if (!data) return await this._insert(tag);
+        return data.id;
+    }
+
+    async getId(tag) {
+        const { data } = await supabase
+            .from("tags")
+            .select("id")
+            .single()
+            .eq("name", tag);
         return data.id;
     }
 }
