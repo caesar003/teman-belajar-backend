@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3002;
 
-const { answer, student, question } = require("./src/db");
+const { answer, student, question, lesson } = require("./src/db");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -13,6 +13,13 @@ app.use(bodyParser.json());
 app.get("/", (req, res) => {
     res.status(403).json({ error: "Access resticted!" });
 });
+
+// LESSONS
+app.get("/api/lesson", (req, res) => lesson.getAll(res));
+
+app.post("/api/lesson/add", (req, res) => lesson.add(req.body, res));
+
+app.patch("/api/lesson/update", (req, res) => lesson.update(req.body, res));
 
 // QUESTIONS
 app.get("/api/question/id/:id", (req, res) => question.get(req.params, res));
@@ -60,6 +67,5 @@ app.post("/api/student/register", (req, res) =>
 app.get("/api/student/search/:name", (req, res) =>
     student.search(req.params, res)
 );
-
 
 app.listen(port, () => console.log(`App is running on port: ${port}`));
