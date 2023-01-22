@@ -1,4 +1,4 @@
-const { supabase } = require("../config");
+const { db } = require("../config");
 
 class TagQuestion {
     async _cleanup(tagId, cb) {
@@ -9,40 +9,41 @@ class TagQuestion {
          * simply checks if if particular id, still exists in the table
          * and delete it if it doesn't
          */
-        const { data } = await supabase
-            .from("tag_question")
-            .select("*")
-            .eq("tag_id", tagId)
-            .single();
+        const [data] = await db`
+            SELECT *
+            FROM tag_question
+            WHERE tag_id=${tagId} 
+        `;
 
         if (data) return;
         return cb(tagId);
     }
     async get(questionId) {
-        const { data } = await supabase
-            .from("tag_question")
-            .select(`tags(*)`)
-            .eq("question_id", questionId);
-
-        return data.map((item) => ({ id: item.tags.id, name: item.tags.name }));
+        const data = await db`
+            SELECT tags.id, tags.name 
+            FROM tag_question
+            JOIN tags on tag_question.tag_id=tags.id
+            WHERE question_id=${questionId} 
+        `;
+        return data;
     }
 
     async getByTagId(tagId) {
-        const { data } = await supabase
-            .from("tag_question")
-            .select("question_id")
-            .eq("tag_id", tagId)
-            .limit(20);
+        const data = await db`
+            SELECT question_id
+            FROM tag_question
+            WHERE tag_id=${tagId}
+            LIMIT 20;
+        `;
 
         return data.map((item) => item.question_id);
     }
 
     async _removeByTag(tagId, questionId) {
-        const data = await supabase
-            .from("tag_question")
-            .delete()
-            .eq("tag_id", tagId)
-            .eq("question_id", questionId);
+        const data = await db`
+            DELETE FROM tag_question
+            WHERE tag_id=${tagId} AND question_id=${questionId}
+        `;
 
         return data;
     }
@@ -54,18 +55,20 @@ class TagQuestion {
     }
 
     async insert(tagId, questionId) {
-        return await supabase.from("tag_question").insert({
-            tag_id: tagId,
-            question_id: questionId,
-        });
+        return await db`
+            INSERT INTO tag_question
+                (tag_id, question_id)
+            VALUES
+                (${tagId}, ${questionId});
+        `;
     }
 
     async remove(questionId, cb) {
-        const { data } = await supabase
-            .from("tag_question")
-            .delete()
-            .eq("question_id", questionId)
-            .select("tag_id");
+        const [data] = await db`
+            DELETE FROM tag_question
+            WHERE question_id=${questionId}
+            RETURNING tag_id;
+        `;
         return data.forEach((item) => this._cleanup(item.tag_id, cb));
     }
 }

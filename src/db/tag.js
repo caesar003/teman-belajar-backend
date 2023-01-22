@@ -1,8 +1,8 @@
-const { supabase } = require("../config");
+const { db } = require("../config");
 
 class Tag {
     async remove(id) {
-        return await supabase.from("tags").delete().eq("id", id);
+        return await db`DELETE FROM tags where id=${id};`;
     }
     async handleNew(tag, questionId, tagQuestion) {
         /**
@@ -18,32 +18,35 @@ class Tag {
     }
 
     async _insert(tag) {
-        const { data } = await supabase
-            .from("tags")
-            .insert({ name: tag })
-            .select("id")
-            .single();
+        const [data] = await db`
+            INSERT INTO tags
+                (name)
+            VALUES
+                (${tag})
+            RETURNING id;
+        `;
 
         return data.id;
     }
 
     async _getId(tag) {
-        const { data } = await supabase
-            .from("tags")
-            .select("id")
-            .single()
-            .eq("name", tag);
+        const [data] = await db`
+            SELECT id
+            FROM tags
+            WHERE name = ${tag}; 
+        `;
 
         if (!data) return await this._insert(tag);
         return data.id;
     }
 
     async getId(tag) {
-        const { data } = await supabase
-            .from("tags")
-            .select("id")
-            .single()
-            .eq("name", tag);
+        const [data] = await db`
+            SELECT id
+            FROM tags
+            WHERE name = ${tag}; 
+        `;
+        if (!data) return null;
         return data.id;
     }
 }

@@ -1,3 +1,3 @@
-const { supabase } = require("./db");
+const { db } = require("./db");
 
-module.exports = { supabase };
+module.exports = { db };

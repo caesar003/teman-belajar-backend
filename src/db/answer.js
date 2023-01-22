@@ -1,30 +1,29 @@
-const { supabase } = require("../config");
+const { db } = require("../config");
 
 class Answer {
     async answer(formData, res) {
         const { text, studentId, questionId } = formData;
-        const { data } = await supabase
-            .from("answers")
-            .insert({
-                question_id: questionId,
-                text,
-                student_id: studentId,
-            })
-            .select("*")
-            .single();
+        const [data] = await db`
+            INSERT INTO answers
+                (question_id, text, student_id)
+            VALUES
+                (${(questionId, text, studentId)})
+            RETURNING *;
+        `;
+
         return res.json(data);
     }
 
     async deleteByQuestion(questionId) {
-        const data = await supabase
-            .from("answers")
-            .delete("*")
-            .eq("question_id", questionId);
+        const data = await db`
+            DELETE FROM answers
+            WHERE question_id=${questionId}
+        `;
         return data;
     }
 
     async getAnswerCounts(ids) {
-        const { data: allAnswers } = await supabase.from("answers").select("*");
+        const [allAnswers] = await db`SELECT * FROM answers`;
         const ranks = ids.map((id) => ({
             id: id.id,
             counts: allAnswers.filter((items) => items.question_id === id.id)
@@ -34,32 +33,39 @@ class Answer {
         return ranks.sort((a, b) => b.counts - a.counts).slice(0, 20);
     }
 
+    async getByQuestion(questionId) {
+        const data = await db`
+            SELECT 
+                answers.id, text, student_id, answers.created_at,
+                vote, students.name as student_name
+            FROM answers
+            JOIN
+                students ON answers.student_id=students.id
+            WHERE answers.question_id=${questionId}
+        `;
+
+        return data;
+    }
+
     async _getVote(id) {
-        const { data } = await supabase
-            .from("answers")
-            .select("vote")
-            .eq("id", id)
-            .single();
+        const [data] = await db`SELECT vote FROM answers WHERE id=${id}`;
 
         return data.vote;
     }
 
     async remove({ id }, res) {
-        const data = await supabase.from("answers").delete().eq("id", id);
-
+        const data = await db`DELETE FROM ansers WHERE id=${id}`;
         return res.json(data);
     }
 
     async update(formData, res) {
         const { id, text } = formData;
-        const { data } = await supabase
-            .from("answers")
-            .update({
-                text: text,
-            })
-            .eq("id", id)
-            .select("*")
-            .single();
+        const [data] = await db`
+            UPDATE answers
+            SET text=${text}
+            WHERE id=${id}
+            RETURNING *;
+        `;
 
         return res.json(data);
     }
@@ -72,12 +78,12 @@ class Answer {
     }
 
     async _vote(vote, id) {
-        const { data } = await supabase
-            .from("answers")
-            .update({ vote: vote })
-            .eq("id", id)
-            .select("*")
-            .single();
+        const [data] = await db`
+            UPDATE answers
+            SET vote=${vote}
+            WHERE id=${id}
+            RETURNING *;
+        `;
 
         return data;
     }

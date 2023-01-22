@@ -1,7 +1,15 @@
 const bcrypt = require("bcrypt");
-const { supabase } = require("../config");
+const { db } = require("../config");
 
 class Student {
+    async get(id) {
+        const [data] = await db`
+            SELECT 
+                id, created_at, name, email, phone 
+            FROM students 
+            WHERE id=${id}`;
+        return data;
+    }
     async register(credentials, res) {
         const { password, name, email, phone } = credentials;
         const emailExist = await this._getByEmail(email);
@@ -9,22 +17,24 @@ class Student {
             return res.status(400).json({ error: "Email is already used!" });
 
         const hash = bcrypt.hashSync(password, 10);
-        const { data: student } = await supabase
-            .from("students")
-            .insert({ name, phone, email, hash })
-            .select("*")
-            .single();
-
-        delete student.hash;
-        return res.json(student);
+        const data = await db`
+            INSERT INTO students
+            (name, email, hash, phone)
+            VALUES
+            (${name}, ${email}, ${hash}, ${phone})
+            RETURNING *;
+        `;
+        delete data.hash;
+        return res.json(data);
     }
 
     async search({ name }, res) {
-        const { data } = await supabase
-            .from("students")
-            .select("id, name, email, phone, created_at")
-            .ilike("name", `%${name}%`)
-            .limit(20);
+        const data = await db`
+            SELECT name, email, phone, id, created_at
+            FROM students
+            WHERE name LIKE %${name}%
+            LIMIT 20;
+        `;
 
         return res.json(data);
     }
@@ -47,11 +57,10 @@ class Student {
     }
 
     async _getByEmail(email) {
-        const { data: student } = await supabase
-            .from("students")
-            .select("*")
-            .eq("email", email)
-            .single();
+        const [student] = await db`
+            SELECT * FROM students
+            WHERE email = ${email};
+        `;
         return student;
     }
 }

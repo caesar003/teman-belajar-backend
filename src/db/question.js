@@ -1,8 +1,9 @@
-const { supabase } = require("../config");
+const { db } = require("../config");
 const { groupTags } = require("../helper");
 const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tag-question");
+const { student } = require("./student");
 
 class Question {
     /**
@@ -42,20 +43,26 @@ class Question {
     }
 
     async _remove(id, res) {
-        const data = await supabase.from("questions").delete().eq("id", id);
+        const data = await db`DELETE FROM questions WHERE id = ${id};`;
         return res.json(data);
     }
 
     async get({ id }, res) {
-        const tags = await tagQuestion.get(id);
-        const { data } = await supabase
-            .from("questions")
-            .select(`*, answers(text, id, created_at, vote)`)
-            .eq("id", id)
-            .single();
+        const [Q] = await db`
+            SELECT * FROM questions
+            WHERE questions.id=${id}`;
 
-        data.tags = tags;
-        return res.json(data);
+        const [{ value: tags }, { value: answers }, { value: studentInfo }] =
+            await Promise.allSettled([
+                tagQuestion.get(id),
+                answer.getByQuestion(id),
+                student.get(Q.student_id),
+            ]);
+
+        Q.tags = tags;
+        Q.answers = answers;
+        Q.student = studentInfo;
+        return res.json(Q);
     }
 
     async getByTag({ tag }, res) {
@@ -67,17 +74,17 @@ class Question {
     }
 
     async _getAllIds() {
-        const { data } = await supabase.from("questions").select("id");
+        const data = await db`SELECT id FROM questions;`;
 
         return data;
     }
 
     async getLatest(res) {
-        const { data } = await supabase
-            .from("questions")
-            .select("*")
-            .limit(20)
-            .order("created_at", { ascending: false });
+        const data = await db`
+            SELECT *
+            FROM questions
+            ORDER BY created_at DESC;
+        `;
 
         return res.json(data);
     }
@@ -101,33 +108,34 @@ class Question {
             })
         );
     }
-  
-    async _getManyByIds(ids) {
-        const { data } = await supabase
-            .from("questions")
-            .select("*")
-            .in("id", ids)
-            .limit(20);
 
+    async _getManyByIds(ids) {
+        /**
+         * You might want to inspect this method further
+         * I kinda feel something's off here
+         */
+        const data = `SELECT * FROM questions WHERE id IN (${ids.toString()})`;
         return data;
     }
 
     async _getVote(id) {
-        const { data } = await supabase
-            .from("questions")
-            .select("vote")
-            .eq("id", id)
-            .single();
-
+        const [data] = await db`
+            SELECT vote
+            FROM questions
+            WHERE id=${id} 
+        `;
         return data.vote;
     }
 
-    async _insert(param) {
-        const { data } = await supabase
-            .from("questions")
-            .insert(param)
-            .select()
-            .single();
+    async _insert({ text, student_id }) {
+        const [data] = await db`
+            INSERT INTO questions
+                (text, student_id)
+            VALUES
+                (${text}, ${student_id})
+            RETURNING *;
+        `;
+
         return data;
     }
 
@@ -166,12 +174,12 @@ class Question {
     }
 
     async _update(text, id) {
-        const { data } = await supabase
-            .from("questions")
-            .update({ text: text })
-            .eq("id", id)
-            .select("*")
-            .single();
+        const data = await db`
+            UPDATE questions
+            SET text=${text}
+            WHERE id=${id}
+            RETURNING *;
+        `;
 
         return data;
     }
@@ -183,12 +191,12 @@ class Question {
     }
 
     async _vote(vote, id) {
-        const { data } = await supabase
-            .from("questions")
-            .update({ vote: vote })
-            .eq("id", id)
-            .select("*")
-            .single();
+        const [data] = await db`
+            UPDATE questions
+            SET vote=${vote}
+            WHERE id=${id}
+            RETURNING *;
+        `;
 
         return data;
     }
