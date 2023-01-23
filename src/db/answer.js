@@ -1,9 +1,13 @@
 const { db } = require("../config");
+const { isValidAnswer } = require("../helper");
 
 class Answer {
     async answer(formData, res) {
+        if (!isValidAnswer(formData))
+            return res.status(400).json({ error: "Bad request!" });
         const { text, studentId, questionId } = formData;
-        const [data] = await db`
+        try {
+            const [data] = await db`
             INSERT INTO answers
                 (question_id, text, student_id)
             VALUES
@@ -11,30 +15,46 @@ class Answer {
             RETURNING *;
         `;
 
-        return res.json(data);
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async deleteByQuestion(questionId) {
-        const data = await db`
+        if (isNaN(questionId)) return;
+        try {
+            const data = await db`
             DELETE FROM answers
             WHERE question_id=${questionId}
         `;
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async getAnswerCounts(ids) {
-        const [allAnswers] = await db`SELECT * FROM answers`;
-        const ranks = ids.map((id) => ({
-            id: id.id,
-            counts: allAnswers.filter((items) => items.question_id === id.id)
-                .length,
-        }));
+        try {
+            const [allAnswers] = await db`SELECT * FROM answers`;
+            const ranks = ids.map((id) => ({
+                id: id.id,
+                counts: allAnswers.filter(
+                    (items) => items.question_id === id.id
+                ).length,
+            }));
 
-        return ranks.sort((a, b) => b.counts - a.counts).slice(0, 20);
+            return ranks.sort((a, b) => b.counts - a.counts).slice(0, 20);
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
     }
 
     async getByQuestion(questionId) {
-        const data = await db`
+        try {
+            const data = await db`
             SELECT 
                 answers.id, text, student_id, answers.created_at,
                 vote, students.name as student_name
@@ -44,48 +64,74 @@ class Answer {
             WHERE answers.question_id=${questionId}
         `;
 
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async _getVote(id) {
-        const [data] = await db`SELECT vote FROM answers WHERE id=${id}`;
+        try {
+            const [data] = await db`SELECT vote FROM answers WHERE id=${id}`;
 
-        return data.vote;
+            return data.vote;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async remove({ id }, res) {
-        const data = await db`DELETE FROM ansers WHERE id=${id}`;
-        return res.json(data);
+        try {
+            const data = await db`DELETE FROM ansers WHERE id=${id}`;
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async update(formData, res) {
-        const { id, text } = formData;
-        const [data] = await db`
+        try {
+            const { id, text } = formData;
+            const [data] = await db`
             UPDATE answers
             SET text=${text}
             WHERE id=${id}
             RETURNING *;
         `;
 
-        return res.json(data);
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async vote({ id, vote }, res) {
-        const currentVote = await this._getVote(id);
-        const data = await this._vote(vote + currentVote, id);
+        try {
+            const currentVote = await this._getVote(id);
+            const data = await this._vote(vote + currentVote, id);
 
-        return res.json(data);
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async _vote(vote, id) {
-        const [data] = await db`
+        try {
+            const [data] = await db`
             UPDATE answers
             SET vote=${vote}
             WHERE id=${id}
             RETURNING *;
         `;
 
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 }
 

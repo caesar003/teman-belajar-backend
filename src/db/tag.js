@@ -2,7 +2,12 @@ const { db } = require("../config");
 
 class Tag {
     async remove(id) {
-        return await db`DELETE FROM tags where id=${id};`;
+        try {
+            return await db`DELETE FROM tags where id=${id};`;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
     async handleNew(tag, questionId, tagQuestion) {
         /**
@@ -13,41 +18,61 @@ class Tag {
          * either way, we call private method _getTagId
          */
 
-        const tagId = await this._getId(tag);
-        return tagQuestion.insert(tagId, questionId);
+        try {
+            const tagId = await this._getId(tag);
+            return tagQuestion.insert(tagId, questionId);
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async _insert(tag) {
-        const [data] = await db`
-            INSERT INTO tags
-                (name)
-            VALUES
-                (${tag})
-            RETURNING id;
-        `;
+        try {
+            const [data] = await db`
+                INSERT INTO tags
+                    (name)
+                VALUES
+                    (${tag})
+                RETURNING id;
+            `;
 
-        return data.id;
+            return data.id;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async _getId(tag) {
-        const [data] = await db`
-            SELECT id
-            FROM tags
-            WHERE name = ${tag}; 
-        `;
+        try {
+            const [data] = await db`
+                SELECT id
+                FROM tags
+                WHERE name = ${tag}; 
+            `;
 
-        if (!data) return await this._insert(tag);
-        return data.id;
+            if (!data) return await this._insert(tag);
+            return data.id;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async getId(tag) {
-        const [data] = await db`
-            SELECT id
-            FROM tags
-            WHERE name = ${tag}; 
-        `;
-        if (!data) return null;
-        return data.id;
+        try {
+            const [data] = await db`
+                SELECT id
+                FROM tags
+                WHERE name = ${tag}; 
+            `;
+            if (!data) return null;
+            return data.id;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 }
 

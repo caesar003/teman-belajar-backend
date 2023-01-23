@@ -1,5 +1,9 @@
 const { db } = require("../config");
-const { groupTags } = require("../helper");
+const {
+    isValidQuestion,
+    groupTags,
+     containsAlphaNumsOnly,
+} = require("../helper");
 const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tag-question");
@@ -19,11 +23,20 @@ class Question {
     async ask(formData, res) {
         const { text, studentId, tags: formTags } = formData;
         const tags = JSON.parse(formTags);
-        const data = await this._insert({ text, student_id: studentId });
-        if (tags.length) {
-            tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
+
+        if (!isValidQuestion({ text, studentId, tags })) {
+            return res.status(400).json({ error: "Bad request!" });
         }
-        return res.json(data);
+
+        try {
+            const data = await this._insert({ text, student_id: studentId });
+            if (tags.length) {
+                tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
+            }
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     /**
@@ -37,17 +50,26 @@ class Question {
          *  - tag_question -> remove -> grab tag id -> check if it is still used
          *  - tag
          */
+        if (!id || !isNaN(id))
+            return res.status(400).json({ error: "Bad request!" });
         await answer.deleteByQuestion(id);
         await tagQuestion.remove(id, Tag.remove);
         return this._remove(id, res);
     }
 
     async _remove(id, res) {
-        const data = await db`DELETE FROM questions WHERE id = ${id};`;
-        return res.json(data);
+        if (isNaN(id)) return res.status(400).json({ error: "Bad request" });
+        try {
+            const data = await db`DELETE FROM questions WHERE id = ${id};`;
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async get({ id }, res) {
+        if (!id || isNaN(id))
+            return res.status(400).json({ error: "Bad request!" });
         const [Q] = await db`
             SELECT * FROM questions
             WHERE questions.id=${id}`;
@@ -66,6 +88,8 @@ class Question {
     }
 
     async getByTag({ tag }, res) {
+        if (!containsAlphaNumsOnly(tag))
+            return res.status(400).json({ error: "Bad request!" });
         const tagId = await Tag.getId(tag);
         const questionIds = await tagQuestion.getByTagId(tagId);
         const data = await this._getManyByIds(questionIds);
@@ -74,19 +98,27 @@ class Question {
     }
 
     async _getAllIds() {
-        const data = await db`SELECT id FROM questions;`;
-
-        return data;
+        try {
+            const data = await db`SELECT id FROM questions;`;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async getLatest(res) {
-        const data = await db`
+        try {
+            const data = await db`
             SELECT *
             FROM questions
             ORDER BY created_at DESC;
         `;
 
-        return res.json(data);
+            return res.json(data);
+        } catch (error) {
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     /**
@@ -114,21 +146,32 @@ class Question {
          * You might want to inspect this method further
          * I kinda feel something's off here
          */
-        const data = `SELECT * FROM questions WHERE id IN (${ids.toString()})`;
-        return data;
+        try {
+            const data = `SELECT * FROM questions WHERE id IN (${ids.toString()})`;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async _getVote(id) {
-        const [data] = await db`
+        try {
+            const [data] = await db`
             SELECT vote
             FROM questions
             WHERE id=${id} 
         `;
-        return data.vote;
+            return data.vote;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     async _insert({ text, student_id }) {
-        const [data] = await db`
+        try {
+            const [data] = await db`
             INSERT INTO questions
                 (text, student_id)
             VALUES
@@ -136,7 +179,11 @@ class Question {
             RETURNING *;
         `;
 
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     /**
@@ -174,31 +221,52 @@ class Question {
     }
 
     async _update(text, id) {
-        const data = await db`
-            UPDATE questions
-            SET text=${text}
-            WHERE id=${id}
-            RETURNING *;
-        `;
+        try {
+            const data = await db`
+                UPDATE questions
+                SET text=${text}
+                WHERE id=${id}
+                RETURNING *;
+            `;
 
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error)
+            return
+        }
     }
 
     async vote({ id, vote }, res) {
-        const currentVote = await this._getVote(id);
-        const data = await this._vote(vote + currentVote, id);
-        return res.json(data);
+        if (!vote || isNaN(vote) || !id || isNaN(id)) {
+            return res.status(400).json({ error: "Bad request!" });
+        }
+        try {
+            /**
+             * I might get back here as I think this hasn't been handled properly
+             */
+            const currentVote = await this._getVote(id);
+            const data = await this._vote(vote + currentVote, id);
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async _vote(vote, id) {
-        const [data] = await db`
-            UPDATE questions
-            SET vote=${vote}
-            WHERE id=${id}
-            RETURNING *;
-        `;
+        try {
+            const [data] = await db`
+                UPDATE questions
+                SET vote=${vote}
+                WHERE id=${id}
+                RETURNING *;
+            `;
 
-        return data;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return;
+        }
     }
 }
 
