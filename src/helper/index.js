@@ -61,7 +61,8 @@ function containsAlphaNumsNPunc(str) {
 function isValidQuestion(formData) {
     const { text, studentId, tags } = formData;
 
-    if (!containStringOnly(text)) return false;
+    if (!text || !studentId) return false;
+
     if (isNaN(studentId)) return false;
 
     for (const tag of tags) {
@@ -72,7 +73,7 @@ function isValidQuestion(formData) {
 }
 function isValidAnswer(formData) {
     const { text, studentId, questionId } = formData;
-    if (!containsAlphaNumsOnly(text)) return false;
+    if (!text || !studentId || !questionId) return false;
     if (isNaN(studentId) || isNaN(questionId)) return false;
 
     return true;
@@ -91,8 +92,10 @@ function isValidQuestionUpdate({ text, id }) {
     if (!text || !id) return false;
     if (!containsAlphaNumsNPunc(text) || isNaN(id)) return false;
 }
-function isValidTagUpdate(tag, questionId){
-    return tag && questionId && containsAlphaNumsOnly(tag) && !isNaN(questionId); 
+function isValidTagUpdate(tag, questionId) {
+    return (
+        tag && questionId && containsAlphaNumsOnly(tag) && !isNaN(questionId)
+    );
 }
 module.exports = {
     isValidAnswer,

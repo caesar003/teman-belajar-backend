@@ -11,12 +11,13 @@ class Answer {
             INSERT INTO answers
                 (question_id, text, student_id)
             VALUES
-                (${(questionId, text, studentId)})
+                (${questionId}, ${text}, ${studentId})
             RETURNING *;
         `;
 
             return res.json(data);
         } catch (error) {
+            console.log(error);
             return res.status(500).json({ error: "Error occured!" });
         }
     }
@@ -75,7 +76,7 @@ class Answer {
         try {
             const [data] = await db`SELECT vote FROM answers WHERE id=${id}`;
 
-            return data.vote;
+            return parseInt(data.vote);
         } catch (error) {
             console.log(error);
             return;
@@ -83,10 +84,12 @@ class Answer {
     }
 
     async remove({ id }, res) {
+        if (!id) return res.status(400).json({ error: "Bad request!" });
         try {
-            const data = await db`DELETE FROM ansers WHERE id=${id}`;
+            const data = await db`DELETE FROM answers WHERE id=${id}`;
             return res.json(data);
         } catch (error) {
+            console.log(error);
             return res.status(500).json({ error: "Error occured!" });
         }
     }
@@ -108,9 +111,12 @@ class Answer {
     }
 
     async vote({ id, vote }, res) {
+        if (!id || !vote || isNaN(id) || isNaN(vote)) {
+            return res.status(400).json({ error: "Bad request!" });
+        }
         try {
             const currentVote = await this._getVote(id);
-            const data = await this._vote(vote + currentVote, id);
+            const data = await this._vote(parseInt(vote) + currentVote, id);
 
             return res.json(data);
         } catch (error) {

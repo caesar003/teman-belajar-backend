@@ -2,7 +2,7 @@ const { db } = require("../config");
 const {
     isValidQuestion,
     groupTags,
-     containsAlphaNumsOnly,
+    containsAlphaNumsOnly,
 } = require("../helper");
 const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
@@ -21,8 +21,7 @@ class Question {
      * @returns question object
      */
     async ask(formData, res) {
-        const { text, studentId, tags: formTags } = formData;
-        const tags = JSON.parse(formTags);
+        const { text, studentId, tags } = formData;
 
         if (!isValidQuestion({ text, studentId, tags })) {
             return res.status(400).json({ error: "Bad request!" });
@@ -45,16 +44,35 @@ class Question {
      */
     async remove({ id }, res) {
         /**
-         * first of all we need to handle tables that are related,
-         *  - answer
-         *  - tag_question -> remove -> grab tag id -> check if it is still used
-         *  - tag
+         * I altered the constraints on both answers and tag_question tables;
+         * So instead of deleting those one by one, we could just remove one question
+         * and answers + tag_question would take a good care of themselves;
+            
+            alter table tag_question
+            drop constraint tag_question_question_id_fkey,
+            add constraint tag_question_question_id_fkey
+            foreign key ("question_id")
+            references "questions"(id)
+            on delete cascade;
+
+
+            alter table answers
+            drop constraint answers_question_id_fkey,
+            add constraint answers_question_id_fkey
+            foreign key ("question_id")
+            references "questions"(id)
+            on delete cascade;
          */
-        if (!id || !isNaN(id))
+
+        if (!id || isNaN(id))
             return res.status(400).json({ error: "Bad request!" });
-        await answer.deleteByQuestion(id);
-        await tagQuestion.remove(id, Tag.remove);
-        return this._remove(id, res);
+        try {
+            const data = await db`DELETE FROM questions WHERE id = ${id}`;
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async _remove(id, res) {
@@ -70,21 +88,31 @@ class Question {
     async get({ id }, res) {
         if (!id || isNaN(id))
             return res.status(400).json({ error: "Bad request!" });
-        const [Q] = await db`
-            SELECT * FROM questions
-            WHERE questions.id=${id}`;
 
-        const [{ value: tags }, { value: answers }, { value: studentInfo }] =
-            await Promise.allSettled([
+        const [Q] = await db`
+                SELECT * FROM questions
+                WHERE questions.id=${id}`;
+        if (!Q)
+            return res.status(404).json({ error: "No question with such id" });
+        try {
+            const [
+                { value: tags },
+                { value: answers },
+                { value: studentInfo },
+            ] = await Promise.allSettled([
                 tagQuestion.get(id),
                 answer.getByQuestion(id),
                 student.get(Q.student_id),
             ]);
 
-        Q.tags = tags;
-        Q.answers = answers;
-        Q.student = studentInfo;
-        return res.json(Q);
+            Q.tags = tags;
+            Q.answers = answers;
+            Q.student = studentInfo;
+            return res.json(Q);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
+        }
     }
 
     async getByTag({ tag }, res) {
@@ -231,8 +259,8 @@ class Question {
 
             return data;
         } catch (error) {
-            console.log(error)
-            return
+            console.log(error);
+            return;
         }
     }
 

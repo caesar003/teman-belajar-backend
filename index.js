@@ -27,7 +27,7 @@ app.get("/api/question/id/:id", (req, res) => question.get(req.params, res));
 app.post("/api/question/ask", (req, res) => question.ask(req.body, res));
 
 app.delete("/api/question/delete", (req, res) =>
-    question.delete(req.body, res)
+    question.remove(req.body, res)
 );
 
 app.patch("/api/question/update", (req, res) => question.update(req.body, res));
