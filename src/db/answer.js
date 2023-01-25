@@ -98,11 +98,11 @@ class Answer {
         try {
             const { id, text } = formData;
             const [data] = await db`
-            UPDATE answers
-            SET text=${text}
-            WHERE id=${id}
-            RETURNING *;
-        `;
+                UPDATE answers
+                SET text=${text}
+                WHERE id=${id}
+                RETURNING *;
+            `;
 
             return res.json(data);
         } catch (error) {

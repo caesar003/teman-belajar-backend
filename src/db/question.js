@@ -21,14 +21,18 @@ class Question {
      * @returns question object
      */
     async ask(formData, res) {
-        const { text, studentId, tags } = formData;
+        const { subjectId, text, studentId, tags } = formData;
 
         if (!isValidQuestion({ text, studentId, tags })) {
             return res.status(400).json({ error: "Bad request!" });
         }
 
         try {
-            const data = await this._insert({ text, student_id: studentId });
+            const data = await this._insert({
+                text,
+                student_id: studentId,
+                subject_id: subjectId,
+            });
             if (tags.length) {
                 tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
             }
@@ -190,20 +194,20 @@ class Question {
             FROM questions
             WHERE id=${id} 
         `;
-            return data.vote;
+            return parseInt(data.vote);
         } catch (error) {
             console.log(error);
             return;
         }
     }
 
-    async _insert({ text, student_id }) {
+    async _insert({ text, student_id, subject_id }) {
         try {
             const [data] = await db`
             INSERT INTO questions
-                (text, student_id)
+                (text, student_id, subject_id)
             VALUES
-                (${text}, ${student_id})
+                (${text}, ${student_id}, ${subject_id})
             RETURNING *;
         `;
 
@@ -214,6 +218,18 @@ class Question {
         }
     }
 
+    async search({ query }, res) {
+        try {
+            const data = await db`
+                SELECT * from questions
+                WHERE text like ${"%" + query + "%"} 
+            `;
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
+        }
+    }
     /**
      * Update question
      * @param {*} formData

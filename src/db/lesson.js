@@ -12,6 +12,25 @@ class Lesson {
         }
     }
 
+    async getAll(res) {
+        try {
+            const data = await db`
+                select 
+                    s.id, 
+                    s.code,
+                    s.name,
+                count(*) as question_count
+                from questions q 
+                join subjects s on q.subject_id = s.id
+                group by s.id;
+            `;
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
+        }
+    }
+
     async add(formData, res) {
         const { code, name } = formData;
         const isCodeUsed = await this._lessonCodeUsed(code);
