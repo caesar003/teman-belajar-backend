@@ -222,30 +222,23 @@ class Question {
      * in addition, we also want to update the tag_question and tags
      * as needed
      */
+
     async update(formData, res) {
-        const { text, id } = formData;
-        const oldTags = JSON.parse(formData.oldTags);
-        const newTags = JSON.parse(formData.newTags);
-        const { toDelete, toInsert } = groupTags(oldTags, newTags);
-
-        /**
-         * Delete tag,
-         * we have these tag names ["tag1", "tag17", ];
-         * What we want is actually, performing a delete operation
-         * on tag_question tables, which contains those tag ids,
-         *
-         */
-
-        if (toDelete.length) {
-            toDelete.forEach((item) => tagQuestion.handleUpdate(item, id, Tag));
+        const { id, text } = formData;
+        if (!id || isNaN(id) || !text) {
+            return res.status(400).json({ error: "Bad request!" });
         }
 
-        if (toInsert.length) {
-            toInsert.forEach((item) => Tag.handleNew(item, id, tagQuestion));
+        try {
+            const [data] = await db`
+                UPDATE questions SET text = ${text}
+                WHERE id = ${id}
+                RETURNING *;`;
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Error occured!" });
         }
-
-        const data = this._update(text, id);
-        return res.json(data);
     }
 
     async _update(text, id) {
