@@ -142,10 +142,11 @@ class Question {
     async getLatest(res) {
         try {
             const data = await db`
-            SELECT *
-            FROM questions
-            ORDER BY created_at DESC;
-        `;
+                select questions.id, questions.created_at, text, student_id, vote, grade, subjects.code as subject_code, subjects.name as subject_name
+                from questions
+                join subjects on questions.subject_id = subjects.id
+                order by created_at desc;;
+            `;
 
             return res.json(data);
         } catch (error) {
