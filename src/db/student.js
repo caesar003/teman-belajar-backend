@@ -4,7 +4,6 @@ const { isValidRegister, isValidSignin } = require("../helper");
 
 class Student {
     async getByEmail ({email}, res) {
-        console.log(email);
         if(!email) {
             return res.status(400).json({error: "Bad request!"})
         }
