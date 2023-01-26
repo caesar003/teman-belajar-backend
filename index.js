@@ -58,6 +58,8 @@ app.patch("/api/answer/vote", (req, res) => answer.vote(req.body, res));
 
 // STUDENTS
 
+app.get("/api/student/email/:email", (req, res) => student.getByEmail(req.params, res))
+
 app.post("/api/student/signin", (req, res) => student.signin(req.body, res));
 
 app.post("/api/student/register", (req, res) =>

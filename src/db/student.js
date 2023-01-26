@@ -3,6 +3,22 @@ const { db } = require("../config");
 const { isValidRegister, isValidSignin } = require("../helper");
 
 class Student {
+    async getByEmail ({email}, res) {
+        console.log(email);
+        if(!email) {
+            return res.status(400).json({error: "Bad request!"})
+        }
+
+        try {
+            const [data] = await db`
+                SELECT  email, id FROM students WHERE email = ${email}
+            `;
+            return res.json(data);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({error: "Error occured!"})
+        }
+    }
     async get(id) {
         if (!id || isNaN(id)) {
             return null;
