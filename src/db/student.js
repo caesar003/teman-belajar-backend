@@ -13,6 +13,7 @@ class Student {
             const [data] = await db`
                 SELECT  email, id FROM students WHERE email = ${email}
             `;
+            if(!data) return res.status(404).json({error: "Not found!"})
             return res.json(data);
         } catch (error) {
             console.log(error);
