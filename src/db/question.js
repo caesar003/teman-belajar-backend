@@ -132,7 +132,10 @@ class Question {
     async getBySubject({id}, res) {
         if(!id || isNaN(id))  return res.status(400).json({error: "Bad request!"})
         const data = await db`
-            SELECT * from questions where subject_id = ${id}
+            SELECT questions.id, questions.grade, questions.created_at, questions.text, questions.vote, questions.student_id, students.name 
+            from questions 
+            join students on questions.student_id = students.id
+            where subject_id = ${id}
         `;
 
        
