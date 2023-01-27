@@ -36,6 +36,8 @@ app.get("/api/question/latest", (req, res) => question.getLatest(res));
 
 app.get("/api/question/popular", (req, res) => question.getPopular(res));
 
+app.get("/api/question/subject/:id", (req, res) => question.getBySubject(req.params, res));
+
 app.get("/api/question/tag/:tag", (req, res) =>
     question.getByTag(req.params, res)
 );

@@ -129,6 +129,17 @@ class Question {
         return res.json(data);
     }
 
+    async getBySubject({id}, res) {
+        if(!id || isNaN(id))  return res.status(400).json({error: "Bad request!"})
+        const data = await db`
+            SELECT * from questions where subject_id = ${id}
+        `;
+
+        console.log(data); 
+       
+       return res.json([]) 
+    }
+
     async _getAllIds() {
         try {
             const data = await db`SELECT id FROM questions;`;
