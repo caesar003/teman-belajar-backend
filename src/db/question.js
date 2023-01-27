@@ -135,9 +135,8 @@ class Question {
             SELECT * from questions where subject_id = ${id}
         `;
 
-        console.log(data); 
        
-       return res.json([]) 
+       return res.json(data) 
     }
 
     async _getAllIds() {
