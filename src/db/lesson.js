@@ -14,17 +14,17 @@ class Lesson {
 
     async getAll(res) {
         try {
-            const data = await db`
-                select 
-                    s.id, 
-                    s.code,
-                    s.name,
-                count(*) as question_count
-                from questions q 
-                join subjects s on q.subject_id = s.id
-                group by s.id;
-            `;
-            return res.json(data);
+            const lessons = await db`SELECT * from subjects`;
+            const qIds = await db`SELECT subject_id from questions`;
+
+            return res.json(
+                lessons.map((lesson) => ({
+                    ...lesson,
+                    question_count: qIds.filter(
+                        (item) => item.subject_id === lesson.id
+                    ).length,
+                }))
+            );
         } catch (error) {
             console.log(error);
             return res.status(500).json({ error: "Error occured!" });
