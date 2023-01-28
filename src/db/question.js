@@ -155,7 +155,7 @@ class Question {
     async getLatest(res) {
         try {
             const data = await db`
-                select questions.id, questions.created_at, text, student_id, students.name as student_name, students.address as student_city, vote, grade, subjects.code as subject_code, subjects.name as subject_name
+                select questions.id, questions.created_at, text, student_id, students.name as student_name, students.avatar, students.address as student_city, vote, grade, subjects.code as subject_code, subjects.name as subject_name
                 from questions
                 join subjects on questions.subject_id = subjects.id
                 join students on questions.student_id = students.id
