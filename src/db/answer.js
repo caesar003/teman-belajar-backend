@@ -57,7 +57,7 @@ class Answer {
         try {
             const data = await db`
             SELECT 
-                answers.id, text, student_id, answers.created_at,
+                answers.id, text, student_id, students.avatar, students.address, students.email, answers.created_at,
                 vote, students.name as student_name
             FROM answers
             JOIN
