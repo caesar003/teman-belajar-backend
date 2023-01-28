@@ -63,6 +63,7 @@ class Answer {
             JOIN
                 students ON answers.student_id=students.id
             WHERE answers.question_id=${questionId}
+            order by created_at asc;
         `;
 
             return data;
