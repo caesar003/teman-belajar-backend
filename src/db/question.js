@@ -94,6 +94,13 @@ class Question {
         if (!id || isNaN(id))
             return res.status(400).json({ error: "Bad request!" });
 
+        const _vote = await db`
+            SELECT vote FROM vote_question
+            WHERE question_id = ${id}
+        `
+        // console.log(_vote);
+        const vote = _vote.reduce((acc, obj) => acc + parseInt(obj.vote), 0);
+
         const [Q] = await db`
                 SELECT * FROM questions
                 WHERE questions.id=${id}`;
@@ -113,6 +120,7 @@ class Question {
             Q.tags = tags;
             Q.answers = answers;
             Q.student = studentInfo;
+            Q.vote = vote;
             return res.json(Q);
         } catch (error) {
             console.log(error);
