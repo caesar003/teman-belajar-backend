@@ -326,7 +326,9 @@ class Question {
      *      true => return, do nothing;
      *      false => set vote = result.vote + form.vote
      */
-    async vote({ id, studentId, vote }, res) {
+    async vote(formData, res) {
+        console.log(formData)
+        const { id, studentId, vote } = formData;
         if (!areAllNumbers([id, studentId, vote]) || !isValidVote(vote)) {
             return res.status(400).json({ error: "Bad request!" });
         }
