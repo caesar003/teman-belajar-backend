@@ -1,5 +1,5 @@
 const { db } = require("../config");
-const { isValidAnswer } = require("../helper");
+const { isValidAnswer, areAllNumbers, isValidVote } = require("../helper");
 
 class Answer {
     async answer(formData, res) {
@@ -111,18 +111,42 @@ class Answer {
         }
     }
 
-    async vote({ id, vote }, res) {
-        if (!id || !vote || isNaN(id) || isNaN(vote)) {
+    async vote({ id, vote, studentId }, res) {
+        if (!areAllNumbers([id, vote, studentId]) || !isValidVote(vote)) {
             return res.status(400).json({ error: "Bad request!" });
         }
-        try {
-            const currentVote = await this._getVote(id);
-            const data = await this._vote(parseInt(vote) + currentVote, id);
 
-            return res.json(data);
-        } catch (error) {
-            return res.status(500).json({ error: "Error occured!" });
+        const [existingVote] = await db`
+            SELECT * FROM vote_answer
+            WHERE answer_id = ${id}
+            AND student_id = ${studentId} 
+        `;
+
+        if (existingVote) {
+            if (parseInt(vote) === parseInt(existingVote.vote)) {
+                return res.status(304).json({ message: "Not modified!" });
+            }
+
+            const _v = parseInt(vote) + parseInt(existingVote.vote);
+
+            const update = await db`
+                UPDATE vote_answer
+                SET vote = ${_v}
+                WHERE id = ${existingVote.id}
+                RETURNING *;
+            `;
+            return res.json(update);
         }
+
+        const data = await db`
+            INSERT INTO vote_answer
+                (answer_id, student_id, vote)
+            VALUES
+                (${id}, ${studentId}, ${vote})
+            RETURNING *;
+        `;
+
+        return res.json(data);
     }
 
     async _vote(vote, id) {

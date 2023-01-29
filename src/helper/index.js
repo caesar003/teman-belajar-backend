@@ -97,7 +97,15 @@ function isValidTagUpdate(tag, questionId) {
         tag && questionId && containsAlphaNumsOnly(tag) && !isNaN(questionId)
     );
 }
+function areAllNumbers(arr) {
+    return arr.every((item) => typeof item === "number");
+}
+
+function isValidVote(vote) {
+    return vote === 1 || vote === -1;
+}
 module.exports = {
+    areAllNumbers,
     isValidAnswer,
     groupTags,
     isValidRegister,
@@ -109,4 +117,5 @@ module.exports = {
     isValidLessonUpdate,
     isValidQuestionUpdate,
     isValidTagUpdate,
+    isValidVote,
 };

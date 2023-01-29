@@ -8,6 +8,7 @@ const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
 const { tagQuestion } = require("./tag-question");
 const { student } = require("./student");
+const { areAllNumbers, isValidVote } = require("../helper");
 
 class Question {
     /**
@@ -129,8 +130,9 @@ class Question {
         return res.json(data);
     }
 
-    async getBySubject({id}, res) {
-        if(!id || isNaN(id))  return res.status(400).json({error: "Bad request!"})
+    async getBySubject({ id }, res) {
+        if (!id || isNaN(id))
+            return res.status(400).json({ error: "Bad request!" });
         const data = await db`
             SELECT questions.id, questions.grade, questions.created_at, questions.text, questions.vote, questions.student_id, students.name 
             from questions 
@@ -138,8 +140,7 @@ class Question {
             where subject_id = ${id}
         `;
 
-       
-       return res.json(data) 
+        return res.json(data);
     }
 
     async _getAllIds() {
@@ -288,21 +289,71 @@ class Question {
         }
     }
 
-    async vote({ id, vote }, res) {
-        if (!vote || isNaN(vote) || !id || isNaN(id)) {
+    /**
+     * There are few adjustments we need to make here.
+     * First, a student can only vote one question once,
+     * So there is no way where a student hit upvote button for thirteen million
+     * times and raised it become thirteen million votes
+     * And this is how we're gonna do it.
+     *
+     * First, we'll remove `vote` column on questions/answers table, and replace
+     * those with other tables called `vote_question` and `vote_answer` respectively
+     *
+     * those tables will have the following schema
+     * | id     | question_id/answer_id     | student_id | vote |
+     * |________|___________________________|____________|______|
+     *
+     *
+     * Handler function (in this case `question.vote` or `answer.vote`) receive
+     * form data with the following shape
+     * {
+     * question_id/answer_id: int,
+     * student_id: int,
+     * vote: int
+     * }
+     *
+     * Note that vote here can be either 1 or -1
+     *
+     * Next step, search against the corresponding table for that exact same question_id
+     * and that exact same student_id
+     *
+     * We expect two possible things,
+     * First, it is not found
+     *      in this case we simply insert a new row;
+     * Second, it is there
+     *      for this matter, we would like to perform one last check
+     *          result.vote === form.vote;
+     *      true => return, do nothing;
+     *      false => set vote = result.vote + form.vote
+     */
+    async vote({ id, studentId, vote }, res) {
+        if (!areAllNumbers([id, studentId, vote]) || !isValidVote(vote)) {
             return res.status(400).json({ error: "Bad request!" });
         }
-        try {
-            /**
-             * I might get back here as I think this hasn't been handled properly
-             */
-            const currentVote = await this._getVote(id);
-            const data = await this._vote(vote + currentVote, id);
-            return res.json(data);
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ error: "Error occured!" });
+
+        const [existingVote] = await db`
+            SELECT * from vote_question 
+            WHERE question_id = ${id} 
+            AND student_id = ${studentId}`;
+
+        if (existingVote) {
+            if (parseInt(vote) === parseInt(existingVote.vote)) {
+                return res.status(304).json({ message: "Not modified!" });
+            }
+            const _v = parseInt(vote) + parseInt(existingVote.vote);
+            const update = await db`
+                UPDATE vote_question 
+                SET vote=${_v} 
+                WHERE id = ${existingVote.id}`;
+            return res.json(update);
         }
+        const data = await db`
+            INSERT INTO vote_question 
+                (question_id, student_id, vote) 
+            VALUES 
+                (${id}, ${studentId}, ${vote}) 
+            RETURNING *`;
+        return res.json(data);
     }
 
     async _vote(vote, id) {
