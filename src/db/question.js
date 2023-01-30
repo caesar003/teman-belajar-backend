@@ -171,7 +171,7 @@ class Question {
     async getLatest(res) {
         try {
             const data = await db`
-                select questions.id, questions.created_at, text, student_id, students.name as student_name, students.avatar, students.address as student_city, vote, grade, subjects.code as subject_code, subjects.name as subject_name
+                select questions.id, questions.created_at, text, student_id, students.name as student_name, students.avatar, students.address as student_city,  grade, subjects.code as subject_code, subjects.name as subject_name
                 from questions
                 join subjects on questions.subject_id = subjects.id
                 join students on questions.student_id = students.id
@@ -180,6 +180,7 @@ class Question {
 
             return res.json(data);
         } catch (error) {
+            console.log(error);
             return res.status(500).json({ error: "Error occured!" });
         }
     }
@@ -189,21 +190,59 @@ class Question {
      * @returns
      * @description - We fetch rows that contains most answers,
      */
+
+    /**
+     * CREATE TABLE views (
+            question_id int,
+            ip VARCHAR(100),
+            created_at TIMESTAMP
+        );
+
+        INSERT INTO VIEWS (question_id, ip, created_at) VALUES (1, '127.0.0.1', NOW()), (2, '127.0.0.2', NOW()), (3, '127.0.0.3', NOW()), (100, '127.0.0.100', NOW());
+
+        SELECT question_id, count(*) as total_views from views WHERE created_at < now() group by question_id order by total_views desc limit 4;
+     */
     async getPopular(res) {
-        const ids = await this._getAllIds();
-        const questionRanks = await answer.getAnswerCounts(ids);
-        const data = await this._getManyByIds(questionRanks.map((m) => m.id));
+        const ranks = await this.#getTodaysPopular();
+        const rows = await db`
+            SELECT * FROM questions
+            where id IN ${db(ranks.map((item) => parseInt(item.question_id)))} 
+        `;
+        if (!rows.length) return res.json([]);
+
         return res.json(
-            data.map((item) => {
-                return {
-                    ...item,
-                    counts: questionRanks.find((rank) => rank.id === item.id)
-                        .counts,
-                };
-            })
+            rows.map((item) => ({
+                ...item,
+                view_count: ranks.find((rank) => rank.question_id === item.id)
+                    .view_count,
+            }))
         );
     }
+    async #getTodaysPopular() {
+        /**
+         * here we look into view_question table on
+         * today's date and count them
+         */
 
+        const now = new Date().getTime();
+        const aDay = 24 * 60 * 60 * 1000;
+        const yesterday = new Date(now - aDay);
+
+        try {
+            const data = await db`
+                SELECT question_id,  
+                COUNT(*) as view_count
+                FROM view_question 
+                WHERE created_at > ${yesterday}
+                group by question_id
+                order by view_count desc
+                `;
+            return data;
+        } catch (error) {
+            console.log(error);
+            return { error: "Error occured!" };
+        }
+    }
     async _getManyByIds(ids) {
         /**
          * You might want to inspect this method further
@@ -261,7 +300,6 @@ class Question {
         if (existingRecord) {
             const currentTime = new Date().getTime();
             const lastVisit = new Date(existingRecord.created_at).getTime();
-
 
             const timeDifference = currentTime - lastVisit;
             const aDay = 24 * 60 * 60 * 1000;
