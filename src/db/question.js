@@ -3,6 +3,7 @@ const {
     isValidQuestion,
     groupTags,
     containsAlphaNumsOnly,
+    getIpAddress,
 } = require("../helper");
 const { answer } = require("./answer");
 const { tag: Tag } = require("./tag");
@@ -90,15 +91,19 @@ class Question {
         }
     }
 
-    async get({ id }, res) {
+    async get(req, res) {
+        const { id } = req.params;
+
         if (!id || isNaN(id))
             return res.status(400).json({ error: "Bad request!" });
+
+        const ip = getIpAddress(req);
 
         const _vote = await db`
             SELECT vote FROM vote_question
             WHERE question_id = ${id}
-        `
-        // console.log(_vote);
+        `;
+
         const vote = _vote.reduce((acc, obj) => acc + parseInt(obj.vote), 0);
 
         const [Q] = await db`
@@ -116,6 +121,8 @@ class Question {
                 answer.getByQuestion(id),
                 student.get(Q.student_id),
             ]);
+
+            await this.#recordView({ ipAddr: ip, questionId: Q.id });
 
             Q.tags = tags;
             Q.answers = answers;
@@ -240,6 +247,46 @@ class Question {
             console.log(error);
             return;
         }
+    }
+
+    async #recordView({ ipAddr, questionId }) {
+        const [existingRecord] = await db`
+            SELECT * FROM view_question 
+            WHERE ip_address = ${ipAddr} 
+            AND question_id=${questionId}
+            ORDER BY created_at DESC
+            LIMIT 1;
+            `;
+
+        if (existingRecord) {
+            const currentTime = new Date().getTime();
+            const lastVisit = new Date(existingRecord.created_at).getTime();
+
+            // console.log(existingRecord);
+            // console.log(currentTime);
+            // console.log(lastVisit);
+
+            const timeDifference = currentTime - lastVisit;
+            // console.log(timeDifference);
+            const aDay = 24 * 60 * 60 * 1000;
+            // console.log(timeDifference);
+            // return;
+            if (timeDifference < aDay) return;
+
+            // insert
+            return await db`
+                INSERT INTO view_question 
+                    (ip_address, question_id) 
+                VALUES 
+                    (${ipAddr}, ${questionId})`;
+        }
+        // return;
+
+        return await db`
+                INSERT INTO view_question 
+                    (ip_address, question_id) 
+                VALUES 
+                    (${ipAddr}, ${questionId})`;
     }
 
     async search({ query }, res) {

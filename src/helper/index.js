@@ -104,6 +104,18 @@ function areAllNumbers(arr) {
 function isValidVote(vote) {
     return vote === 1 || vote === -1;
 }
+
+function getIpAddress(req) {
+    const ips = (
+        req.headers["cf-connecting-ip"] ||
+        req.headers["x-real-ip"] ||
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress ||
+        ""
+    ).split(",");
+
+    return ips[0].trim();
+}
 module.exports = {
     areAllNumbers,
     isValidAnswer,
@@ -118,4 +130,5 @@ module.exports = {
     isValidQuestionUpdate,
     isValidTagUpdate,
     isValidVote,
+    getIpAddress,
 };

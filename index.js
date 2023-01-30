@@ -22,7 +22,7 @@ app.post("/api/lesson/add", (req, res) => lesson.add(req.body, res));
 app.patch("/api/lesson/update", (req, res) => lesson.update(req.body, res));
 
 // QUESTIONS
-app.get("/api/question/id/:id", (req, res) => question.get(req.params, res));
+app.get("/api/question/id/:id", (req, res) => question.get(req, res));
 
 app.post("/api/question/ask", (req, res) => question.ask(req.body, res));
 
