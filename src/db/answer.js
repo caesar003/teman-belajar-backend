@@ -1,5 +1,10 @@
 const { db } = require("../config");
-const { isValidAnswer, areAllNumbers, isValidVote } = require("../helper");
+const {
+    isValidAnswer,
+    areAllNumbers,
+    isValidVote,
+    mergeVotes,
+} = require("../helper");
 
 class Answer {
     async answer(formData, res) {
@@ -54,11 +59,12 @@ class Answer {
     }
 
     async getByQuestion(questionId) {
+        const votes = await db`select * from vote_answer`;
         try {
             const data = await db`
             SELECT 
                 answers.id, text, student_id, students.avatar, students.address, students.email, answers.created_at,
-                vote, students.name as student_name
+                 students.name as student_name
             FROM answers
             JOIN
                 students ON answers.student_id=students.id
@@ -66,7 +72,8 @@ class Answer {
             order by created_at asc;
         `;
 
-            return data;
+            const merged = mergeVotes(data, votes);
+            return merged;
         } catch (error) {
             console.log(error);
             return;

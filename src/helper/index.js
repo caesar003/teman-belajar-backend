@@ -116,6 +116,25 @@ function getIpAddress(req) {
 
     return ips[0].trim();
 }
+
+function mergeVotes(answers, votes) {
+    const output = answers.map((answer) => ({ ...answer, vote: 0 }));
+    votes.forEach((vote) => {
+        output.forEach((answer) => {
+            console.log(answer.id, vote.answer_id);
+            if (answer.id === vote.answer_id) {
+                answer.vote += parseInt(vote.vote);
+            }
+        });
+    });
+
+    return null;
+}
+
+function countVotes(votes) {
+    const ids = votes.map();
+}
+
 module.exports = {
     areAllNumbers,
     isValidAnswer,
@@ -131,4 +150,5 @@ module.exports = {
     isValidTagUpdate,
     isValidVote,
     getIpAddress,
+    mergeVotes,
 };
