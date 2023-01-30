@@ -262,25 +262,17 @@ class Question {
             const currentTime = new Date().getTime();
             const lastVisit = new Date(existingRecord.created_at).getTime();
 
-            // console.log(existingRecord);
-            // console.log(currentTime);
-            // console.log(lastVisit);
 
             const timeDifference = currentTime - lastVisit;
-            // console.log(timeDifference);
             const aDay = 24 * 60 * 60 * 1000;
-            // console.log(timeDifference);
-            // return;
             if (timeDifference < aDay) return;
 
-            // insert
             return await db`
                 INSERT INTO view_question 
                     (ip_address, question_id) 
                 VALUES 
                     (${ipAddr}, ${questionId})`;
         }
-        // return;
 
         return await db`
                 INSERT INTO view_question 
