@@ -121,14 +121,13 @@ function mergeVotes(answers, votes) {
     const output = answers.map((answer) => ({ ...answer, vote: 0 }));
     votes.forEach((vote) => {
         output.forEach((answer) => {
-            console.log(answer.id, vote.answer_id);
             if (answer.id === vote.answer_id) {
                 answer.vote += parseInt(vote.vote);
             }
         });
     });
 
-    return null;
+    return output;
 }
 
 function countVotes(votes) {
