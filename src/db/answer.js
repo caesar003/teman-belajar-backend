@@ -73,7 +73,6 @@ class Answer {
         `;
 
             const merged = mergeVotes(data, votes);
-            console.log(merged);
             return merged;
         } catch (error) {
             console.log(error);

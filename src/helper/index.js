@@ -59,16 +59,9 @@ function containsAlphaNumsNPunc(str) {
 }
 
 function isValidQuestion(formData) {
-    const { text, studentId, tags } = formData;
-
-    if (!text || !studentId) return false;
-
-    if (isNaN(studentId)) return false;
-
-    for (const tag of tags) {
-        if (!containsAlphaNumsOnly(tag)) return false;
-    }
-
+    const { text, studentId, grade, subjectId } = formData;
+    if (!text || !studentId || !grade || !subjectId) return false;
+    if (!areAllNumbers([+studentId, +grade, +subjectId])) return false;
     return true;
 }
 function isValidAnswer(formData) {

@@ -23,9 +23,10 @@ class Question {
      * @returns question object
      */
     async ask(formData, res) {
-        const { subjectId, text, studentId, tags } = formData;
+        // const { subjectId, text, studentId, tags, grade } = formData;
+        const { text, studentId, tags, grade, subjectId } = formData;
 
-        if (!isValidQuestion({ text, studentId, tags })) {
+        if (!isValidQuestion({ text, studentId, grade, subjectId })) {
             return res.status(400).json({ error: "Bad request!" });
         }
 
@@ -34,6 +35,7 @@ class Question {
                 text,
                 student_id: studentId,
                 subject_id: subjectId,
+                grade: grade,
             });
             if (tags.length) {
                 tags.forEach((tag) => Tag.handleNew(tag, data.id, tagQuestion));
@@ -53,7 +55,7 @@ class Question {
          * I altered the constraints on both answers and tag_question tables;
          * So instead of deleting those one by one, we could just remove one question
          * and answers + tag_question would take a good care of themselves;
-            
+
             alter table tag_question
             drop constraint tag_question_question_id_fkey,
             add constraint tag_question_question_id_fkey
@@ -149,8 +151,8 @@ class Question {
         if (!id || isNaN(id))
             return res.status(400).json({ error: "Bad request!" });
         const data = await db`
-            SELECT questions.id, questions.grade, questions.created_at, questions.text, questions.vote, questions.student_id, students.name 
-            from questions 
+            SELECT questions.id, questions.grade, questions.created_at, questions.text, questions.vote, questions.student_id, students.name
+            from questions
             join students on questions.student_id = students.id
             where subject_id = ${id}
         `;
@@ -206,7 +208,7 @@ class Question {
         const ranks = await this.#getTodaysPopular();
         const rows = await db`
             SELECT * FROM questions
-            where id IN ${db(ranks.map((item) => parseInt(item.question_id)))} 
+            where id IN ${db(ranks.map((item) => parseInt(item.question_id)))}
         `;
         if (!rows.length) return res.json([]);
 
@@ -230,9 +232,9 @@ class Question {
 
         try {
             const data = await db`
-                SELECT question_id,  
+                SELECT question_id,
                 COUNT(*) as view_count
-                FROM view_question 
+                FROM view_question
                 WHERE created_at > ${yesterday}
                 group by question_id
                 order by view_count desc
@@ -262,7 +264,7 @@ class Question {
             const [data] = await db`
             SELECT vote
             FROM questions
-            WHERE id=${id} 
+            WHERE id=${id}
         `;
             return parseInt(data.vote);
         } catch (error) {
@@ -271,13 +273,13 @@ class Question {
         }
     }
 
-    async _insert({ text, student_id, subject_id }) {
+    async _insert({ text, student_id, subject_id, grade }) {
         try {
             const [data] = await db`
             INSERT INTO questions
-                (text, student_id, subject_id)
+                (text, student_id, subject_id, grade)
             VALUES
-                (${text}, ${student_id}, ${subject_id})
+                (${text}, ${student_id}, ${subject_id}, ${grade})
             RETURNING *;
         `;
 
@@ -290,8 +292,8 @@ class Question {
 
     async #recordView({ ipAddr, questionId }) {
         const [existingRecord] = await db`
-            SELECT * FROM view_question 
-            WHERE ip_address = ${ipAddr} 
+            SELECT * FROM view_question
+            WHERE ip_address = ${ipAddr}
             AND question_id=${questionId}
             ORDER BY created_at DESC
             LIMIT 1;
@@ -306,16 +308,16 @@ class Question {
             if (timeDifference < aDay) return;
 
             return await db`
-                INSERT INTO view_question 
-                    (ip_address, question_id) 
-                VALUES 
+                INSERT INTO view_question
+                    (ip_address, question_id)
+                VALUES
                     (${ipAddr}, ${questionId})`;
         }
 
         return await db`
-                INSERT INTO view_question 
-                    (ip_address, question_id) 
-                VALUES 
+                INSERT INTO view_question
+                    (ip_address, question_id)
+                VALUES
                     (${ipAddr}, ${questionId})`;
     }
 
@@ -323,7 +325,7 @@ class Question {
         try {
             const data = await db`
                 SELECT * from questions
-                WHERE text like ${"%" + query + "%"} 
+                WHERE text like ${"%" + query + "%"}
             `;
             return res.json(data);
         } catch (error) {
@@ -418,8 +420,8 @@ class Question {
         }
 
         const [existingVote] = await db`
-            SELECT * from vote_question 
-            WHERE question_id = ${id} 
+            SELECT * from vote_question
+            WHERE question_id = ${id}
             AND student_id = ${studentId}`;
 
         if (existingVote) {
@@ -428,16 +430,16 @@ class Question {
             }
             const _v = parseInt(vote) + parseInt(existingVote.vote);
             const update = await db`
-                UPDATE vote_question 
-                SET vote=${_v} 
+                UPDATE vote_question
+                SET vote=${_v}
                 WHERE id = ${existingVote.id}`;
             return res.json(update);
         }
         const data = await db`
-            INSERT INTO vote_question 
-                (question_id, student_id, vote) 
-            VALUES 
-                (${id}, ${studentId}, ${vote}) 
+            INSERT INTO vote_question
+                (question_id, student_id, vote)
+            VALUES
+                (${id}, ${studentId}, ${vote})
             RETURNING *`;
         return res.json(data);
     }
